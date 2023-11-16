@@ -17,7 +17,7 @@ import UIKit
         UILabel(frame: CGRect(x: self.avatar.frame.maxX+12, y: self.avatar.frame.minX+4, width: self.contentView.frame.width-self.avatar.frame.maxX-12-16-50, height: 16)).backgroundColor(.clear)
     }()
 
-    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+    @objc public required override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.contentView.backgroundColor = .clear
         self.backgroundColor = .clear

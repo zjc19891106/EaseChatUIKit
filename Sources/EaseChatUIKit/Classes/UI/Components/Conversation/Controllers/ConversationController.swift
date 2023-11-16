@@ -6,11 +6,15 @@ import UIKit
     public private(set) var id = ""
     
     public private(set) lazy var navigation: EaseChatNavigationBar = {
-        EaseChatNavigationBar(showLeftItem: true)
+        EaseChatNavigationBar(showLeftItem: true,rightImages: [UIImage(named: "add", in: .chatBundle, with: nil)!])
+    }()
+    
+    public private(set) lazy var search: UIButton = {
+        UIButton(type: .custom).frame(CGRect(x: 16, y: self.navigation.frame.maxY, width: self.view.frame.width-32, height: self.view.frame.height-8)).backgroundColor(UIColor.theme.neutralColor95).textColor(UIColor.theme.neutralColor6, .normal).cornerRadius(.large).title(" Search".chat.localize, .normal).image(UIImage(named: "search", in: .chatBundle, with: nil), .normal).addTargetFor(self, action: #selector(searchAction), for: .touchUpInside)
     }()
     
     public private(set) lazy var conversationList: ConversationList = {
-        ConversationList(frame: CGRect(x: 0, y: NavigationHeight+44, width: self.view.frame.width, height: ScreenHeight-NavigationHeight-44-BottomBarHeight), style: .plain)
+        ConversationList(frame: CGRect(x: 0, y: self.search.frame.maxY, width: self.view.frame.width, height: ScreenHeight-NavigationHeight-44-BottomBarHeight), style: .plain)
     }()
     
     public private(set) var binder: ConversationBinder = ConversationBinder()
@@ -35,6 +39,12 @@ import UIKit
         self.binder = ConversationBinder(provider: provider)
     }
     
+    /// Update navigation avatar url.
+    /// - Parameter url: The url of avatar.
+    @MainActor @objc public func updateAvatarURL(url: String) {
+        self.navigation.avatarURL = url
+    }
+    
     open override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
         self.navigationController?.setNavigationBarHidden(true, animated: false)
@@ -51,12 +61,24 @@ import UIKit
     
     open override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.addSubViews([self.conversationList])
+        self.view.addSubViews([self.navigation,self.search,self.conversationList])
         //Bind UI driver and service
         self.binder.bind(driver: self.conversationList, service: ConversationServiceImplement(conversationId: self.id), multi: MultiDeviceServiceImplement())
         //Conversation list click push to message list controller.
         self.binder.toChat = { [weak self] in
             self?.toChat(indexPath: $0, info: $1)
+        }
+        //Back button click
+        self.navigation.leftItemClick = { [weak self] in
+            self?.pop()
+        }
+    }
+    
+    private func pop() {
+        if self.navigationController != nil {
+            self.navigationController?.popViewController(animated: true)
+        } else {
+            self.dismiss(animated: true)
         }
     }
     
@@ -82,5 +104,12 @@ import UIKit
         }
     }
     
+    @objc private func searchAction() {
+        if self.navigationController != nil {
+            self.navigationController?.pushViewController(SearchConversationController(searchInfos: self.conversationList.datas), animated: true)
+        } else {
+            self.navigationController?.present(SearchConversationController(searchInfos: self.conversationList.datas), animated: true)
+        }
+    }
 }
 

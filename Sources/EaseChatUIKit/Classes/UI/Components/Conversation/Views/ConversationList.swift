@@ -19,7 +19,7 @@ import UIKit
         self.eventHandlers.remove(actionHandler)
     }
     
-    private var datas: [ConversationInfo] = []  {
+    public private(set) var datas: [ConversationInfo] = []  {
         didSet {
             DispatchQueue.main.async {
                 if self.datas.count <= 0 {

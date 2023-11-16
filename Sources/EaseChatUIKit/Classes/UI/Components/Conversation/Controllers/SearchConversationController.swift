@@ -75,8 +75,11 @@ import UIKit
         self.searchHeader.textFieldState = { [weak self] in
             self?.active = $0 == .began
         }
-        self.searchHeader.actionClosure = { [weak self] _  in
+        self.searchHeader.actionClosure = { [weak self] in
             self?.active = false
+            if $0 == .back {
+                self?.pop()
+            }
         }
     }
     
@@ -85,12 +88,23 @@ import UIKit
 
 extension SearchConversationController: UITableViewDelegate,UITableViewDataSource {
     
+    private func pop() {
+        if self.navigationController != nil {
+            self.navigationController?.popViewController(animated: true)
+        } else {
+            self.dismiss(animated: true)
+        }
+    }
+    
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         self.active ? self.searchResults.count:self.datas.count
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var cell = tableView.dequeueReusableCell(with: ComponentsRegister.shared.ConversationSearchResultCell, reuseIdentifier: "ConversationSearchCell")
+        if cell == nil {
+            cell = ComponentsRegister.shared.ConversationSearchResultCell.init(style: .default, reuseIdentifier: "ConversationSearchCell")
+        }
         if self.active {
             if let info = self.searchResults[safe: indexPath.row] {
                 cell?.refresh(info: info, keyword: self.searchText)

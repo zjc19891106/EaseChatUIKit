@@ -43,6 +43,15 @@ import UIKit
         }
     }
     
+    /// Avatar url
+    public var avatarURL: String? {
+        didSet {
+            if let url = self.avatarURL {
+                self.avatar.image(with: url, placeHolder: Appearance.avatarPlaceHolder)
+            }
+        }
+    }
+    
     public private(set) lazy var leftItem: UIButton = {
         UIButton(type: .custom).frame(CGRect(x: 10, y: StatusBarHeight+16, width: 24, height: 24)).image(self.backImage, .normal).tag(0).addTargetFor(self, action: #selector(buttonAction), for: .touchUpInside).backgroundColor(.clear)
     }()
