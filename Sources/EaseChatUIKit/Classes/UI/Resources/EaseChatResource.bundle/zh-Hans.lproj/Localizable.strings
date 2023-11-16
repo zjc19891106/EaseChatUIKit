@@ -1,0 +1,54 @@
+"Send"="发送";
+"Joined"="已加入";
+"Search" = "搜索";
+
+"Post Success" = "发布成功";
+"Post Failed" = "发布失败";
+
+
+
+"Welcome to " = "欢迎来到";
+
+"Joined successful!" = "加入成功";
+"Join IM failed!" = "加入聊天室失败";
+
+"Notice Posted"="公告已发布";
+
+"Joined" = "已加入";
+
+"Content prohibited" = "内容禁止发送";
+"You were kicked out of the chatroom" = "您已经被踢出聊天室";
+"StartChat" = "说点什么";
+
+"Violation options" = "违规选项";
+"barrage_long_press_menu_privatechat" = "私信";
+"barrage_long_press_menu_translate" = "翻译";
+"barrage_long_press_menu_delete" = "删除";
+"barrage_long_press_menu_mute" = "禁言";
+"barrage_long_press_menu_unmute" = "解除禁言";
+"barrage_long_press_menu_report" = "举报";
+"barrage_long_press_menu_cancel" = "取消";
+"report_button_click_menu_button_cancel" = "取消";
+"Confirm" = "确定";
+
+
+"participant_list_title" = "成员列表";
+
+"Ban List" = "禁言列表";
+"Sent" = "Sent";
+
+"violation_reason_1" = "不受欢迎的商业内容或垃圾内容";
+"violation_reason_2" = "色情或露骨内容";
+"violation_reason_3" = "虐待儿童";
+"violation_reason_4" = "仇恨言论或过于写实的暴力内容";
+"violation_reason_5" = "宣扬恐怖主义";
+"violation_reason_6" = "骚扰或欺凌";
+"violation_reason_7" = "自杀或自残";
+"violation_reason_8" = "虚假信息";
+"violation_reason_9" = "其他";
+"Search" = "搜索";
+"participant_list_button_click_menu_remove" = "移除";
+"Your were muted!" = "您已被禁言";
+"new messages" = "条新消息";
+
+

@@ -1,0 +1,53 @@
+"Sent "="Sent ";
+"Joined"="Joined";
+
+
+"Post Success" = "Post Success";
+"Post Failed" = "Post Failed";
+
+
+
+"Welcome to" = "Welcome to";
+
+"Joined successful!" = "Joined successful!";
+"Join IM failed!" = "join IM failed!";
+
+"Notice Posted"="Notice Posted";
+
+"Joined" = "Joined";
+
+"Content prohibited" = "Content prohibited";
+
+"StartChat" = "Let's chat";
+
+"Violation options" = "Violation options";
+
+"barrage_long_press_menu_privatechat" = "Private Chat";
+"barrage_long_press_menu_translate" = "Translate";
+"barrage_long_press_menu_delete" = "Delete";
+"barrage_long_press_menu_mute" = "Mute";
+"barrage_long_press_menu_unmute" = "unmute";
+"barrage_long_press_menu_report" = "Report";
+"barrage_long_press_menu_cancel" = "Cancel";
+"report_button_click_menu_title" = "Report";
+"report_button_click_menu_button_cancel" = "Cancel";
+"Confirm" = "Confirm";
+"participant_list_title" = "Participants";
+"Ban List" = "Ban List";
+"Sent" = "Sent";
+
+"violation_reason_1" = "Unwelcome commercial content or spam";
+"violation_reason_2" = "Pornographic or explicit content";
+"violation_reason_3" = "Child abuse";
+"violation_reason_4" = "Hate speech or graphic violence";
+"violation_reason_5" = "Promote terrorism";
+"violation_reason_6" = "Harassment or bullying";
+"violation_reason_7" = "Suicide or self harm";
+"violation_reason_8" = "False information";
+"violation_reason_9" = "Others";
+"Search" = "Search";
+"participant_list_button_click_menu_remove" = "Remove";
+"Your were muted!" = "Your were muted!";
+"new messages" = "new messages";
+
+
