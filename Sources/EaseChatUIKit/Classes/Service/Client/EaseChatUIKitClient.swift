@@ -9,9 +9,12 @@ import Foundation
     public var option_chat: ChatOptions = ChatOptions()
     
     @objcMembers public class ChatOptions: ChatSDKOptions {
-        var withUserProperties = true
         
+        /// Whether to store session avatars and nicknames in EaseChatUIKit.
         var saveConversationInfo = true
+        
+        /// Prioritize pulling messages from the server.
+        var fetchServerHistoryMessages = false
     }
     
     @objcMembers public class UIOptions: NSObject {
@@ -23,16 +26,15 @@ import Foundation
         
     public static let shared = EaseChatUIKitClient()
     
-    
     /// User-related protocol implementation class.
-    public private(set) lazy var userImplement: UserServiceProtocol? = nil
+    public private(set) lazy var userService: UserServiceProtocol? = nil
     
     /// Options function wrapper.
     public private(set) lazy var option: EaseChatUIKitOptions = EaseChatUIKitOptions()
     
     /// Initializes the chat room UIKit.
     /// - Parameters:
-    ///   - appKey: The unique identifier that Chat assigns to each app. For details, see https://docs.agora.io/en/agora-chat/get-started/enable?platform=ios#get-chat-project-information.
+    ///   - appKey: The unique identifier that Chat assigns to each app.
     /// Returns the initialization success or an error that includes the description of the cause of the failure.
     @objc public func setup(with appKey: String,option: EaseChatUIKitOptions.ChatOptions = EaseChatUIKitOptions.ChatOptions()) -> ChatError? {
         let option = EaseChatUIKitOptions.ChatOptions(appkey: appKey)
@@ -45,60 +47,48 @@ import Foundation
     /// - Parameters:
     ///   - user: An instance that conforms to ``UserInfoProtocol``.
     ///   - token: The user chat token.
-    ///   - userProperties: Whether the user passes in his or her own user information (including the avatar, nickname, and user ID) as user attributes for use in ChatRoom
     @objc public func login(user: UserInfoProtocol,token: String,completion: @escaping (ChatError?) -> Void) {
-//        ChatroomContext.shared?.currentUser = user
-//        self.userImplement = UserServiceImplement(userInfo: user, token: token, use: self.option.option_chat.useProperties, completion: completion)
-    }
-    
-    /// Login user id.
-    /// - Parameters:
-    ///   - userId: The user ID.
-    ///   - token: The user chat token.
-    ///   - completion: Login result.
-    @objc public func login(userId: String,token: String,completion: @escaping (ChatError?) -> Void) {
-        let user = User()
-        user.userId = userId
-//        ChatroomContext.shared?.currentUser = user
-//        self.userImplement = UserServiceImplement(userInfo: user, token: token, use: false, completion: completion)
-//        self.userImplement?.bindUserStateChangedListener(listener: self)
+        EaseChatUIKitContext.shared?.currentUser = user
+        self.userService = UserServiceImplement(userInfo: user, token: token, completion: completion)
     }
     
     /// Logout user
     @objc public func logout() {
-        self.userImplement?.logout(completion: { _, _ in })
-        self.userImplement?.unBindUserStateChangedListener(listener: self)
+        self.userService?.logout(completion: { _, _ in })
+    }
+    
+    /// unregister theme.
+    @objc public func unregisterThemes() {
+        Theme.unregisterSwitchThemeViews()
+    }
+    
+    /// Updates user information that is used for login with the `login(with user: UserInfoProtocol,token: String,use userProperties: Bool = true,completion: @escaping (ChatError?) -> Void)` method.
+    /// - Parameters:
+    ///   - info: An instance that conforms to ``UserInfoProtocol``.
+    ///   - completion: Callback.
+    @objc public func updateUserInfo(info: UserInfoProtocol,completion: @escaping (ChatError?) -> Void) {
+        self.userService?.updateUserInfo(userInfo: info, completion: { success, error in
+            completion(error)
+        })
+    }
+    
+    /// Registers a chat room event listener.
+    /// - Parameter listener: ``UserStateChangedListener``
+    @objc public func registerUserEventsListener(listener: UserStateChangedListener) {
+        self.userService?.unBindUserStateChangedListener(listener: listener)
+        self.userService?.bindUserStateChangedListener(listener: listener)
+    }
+    
+    /// Unregisters a chat room event listener.
+    /// - Parameter listener: ``UserStateChangedListener``
+    @objc public func unregisterUserEventsListener(listener: UserStateChangedListener) {
+        self.userService?.unBindUserStateChangedListener(listener: listener)
+    }
+    
+    ///  Refreshes the user chat token when receiving the ``RoomEventsListener.onUserTokenWillExpired`` callback.
+    /// - Parameter token: The user chat token.
+    @objc public func refreshToken(token: String) {
+        ChatClient.shared().renewToken(token)
     }
 }
 
-extension EaseChatUIKitClient: UserStateChangedListener {
-    public func onUserLoginOtherDevice(device: String) {
-        
-    }
-    
-    public func onUserTokenWillExpired() {
-        
-    }
-    
-    public func onUserTokenDidExpired() {
-        
-    }
-    
-    public func onSocketConnectionStateChanged(state: ConnectionState) {
-        
-    }
-    
-    public func userAccountDidRemoved() {
-        
-    }
-    
-    public func userDidForbidden() {
-        
-    }
-    
-    public func userAccountDidForcedToLogout(error: ChatError?) {
-        
-    }
-    
-    
-}

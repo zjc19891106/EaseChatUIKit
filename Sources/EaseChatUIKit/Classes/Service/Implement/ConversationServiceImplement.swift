@@ -7,6 +7,8 @@
 
 import UIKit
 
+
+
 @objc public class ConversationServiceImplement: NSObject {
     
     private let pageSize = UInt8(50)
@@ -18,6 +20,8 @@ import UIKit
     @UserDefault("EaseChatUIKit_conversation_mute_map", defaultValue: Dictionary<String,Int>()) private var muteMap
     
     private var responseDelegates: NSHashTable<ConversationServiceListener> = NSHashTable<ConversationServiceListener>.weakObjects()
+    
+    private var eventsNotifiers: NSHashTable<ConversationEmergencyListener> = NSHashTable<ConversationEmergencyListener>.weakObjects()
     
     public override init() {
         super.init()
@@ -31,6 +35,7 @@ import UIKit
 
 extension ConversationServiceImplement: ConversationService {
     
+    
     public func loadExistConversations(completion: @escaping ([ConversationInfo],ChatError?) -> Void) {
         let items = ChatClient.shared().chatManager?.getAllConversations(true) ?? []
         let userId = ChatClient.shared().currentUsername ?? ""
@@ -40,7 +45,6 @@ extension ConversationServiceImplement: ConversationService {
                 if error == nil {
                     if let list = result?.list,list.isEmpty {
                         self.fetchAllConversations { [weak self] result1, error1 in
-                            guard let `self` = self else { return  }
                             if error1 == nil {
                                 if let list1 = result1?.list,!list1.isEmpty {
                                     completion(list1,nil)
@@ -68,7 +72,9 @@ extension ConversationServiceImplement: ConversationService {
                             }
                         }
                     }
+                    self.handleResult(error: error, type: .loadAllMessageFirstLoadUIKit)
                 } else {
+                    self.handleResult(error: error, type: .loadAllMessageFirstLoadUIKit)
                     completion([],error)
                 }
             }
@@ -82,7 +88,8 @@ extension ConversationServiceImplement: ConversationService {
         let conversations = conversationIds.map {
             ChatClient.shared().chatManager?.getConversationWithConvId($0) ?? ChatConversation()
         }
-        ChatClient.shared().pushManager?.getSilentMode(for: conversations,completion: { result, error in
+        ChatClient.shared().pushManager?.getSilentMode(for: conversations,completion: { [weak self] result, error in
+            self?.handleResult(error: error, type: .fetchSilent)
             completion(result,error)
         })
     }
@@ -93,6 +100,7 @@ extension ConversationServiceImplement: ConversationService {
                 if error == nil {
                     self?.muteMap[result?.conversationID ?? ""] = 1
                 }
+                self?.handleResult(error: error, type: .setSilent)
                 completion(result,error)
             })
         }
@@ -100,10 +108,11 @@ extension ConversationServiceImplement: ConversationService {
     
     public func clearSilentMode(conversationId: String, completion: @escaping (SilentModeResult?, ChatError?) -> Void) {
         if let conversation = ChatClient.shared().chatManager?.getConversationWithConvId(conversationId) {
-            ChatClient.shared().pushManager?.clearRemindType(forConversation: conversationId, conversationType: conversation.type, completion: { result, error in
+            ChatClient.shared().pushManager?.clearRemindType(forConversation: conversationId, conversationType: conversation.type, completion: { [weak self] result, error in
                 if error == nil {
-                    self.muteMap.removeValue(forKey: result?.conversationID ?? "")
+                    self?.muteMap.removeValue(forKey: result?.conversationID ?? "")
                 }
+                self?.handleResult(error: error, type: .clearSilent)
                 completion(result,error)
             })
         }
@@ -111,6 +120,7 @@ extension ConversationServiceImplement: ConversationService {
     
     public func fetchPinnedConversations(cursor: String, pageSize: UInt8, completion: @escaping (CursorResult<ConversationInfo>?, ChatError?) -> Void) {
         ChatClient.shared().chatManager?.getPinnedConversationsFromServer(withCursor: cursor, pageSize: pageSize, completion: { [weak self] result, error in
+            self?.handleResult(error: error, type: .fetchPinned)
             completion(CursorResult(list: self?.mapper(objects: result?.list ?? []), andCursor: cursor),error)
         })
     }
@@ -129,6 +139,7 @@ extension ConversationServiceImplement: ConversationService {
                             }
                         }
                         completion?(CursorResult(list: self?.mapper(objects: list), andCursor: self?.cursor ?? ""),silentError)
+                        self?.fetchAllConversations(completion: nil)
                     })
                 } else {
                     self?.fetchAllConversations(completion: nil)
@@ -140,25 +151,28 @@ extension ConversationServiceImplement: ConversationService {
                 }
             } else {
                 completion?(nil,error)
+                return
             }
         })
     }
     
     public func pin(conversationId: String, completion: @escaping (ChatError?) -> Void) {
-        ChatClient.shared().chatManager?.pinConversation(conversationId, isPinned: true, completionBlock: { error in
+        ChatClient.shared().chatManager?.pinConversation(conversationId, isPinned: true, completionBlock: { [weak self] error in
+            self?.handleResult(error: error, type: .pin)
             completion(error)
         })
     }
     
     public func unpin(conversationId: String, completion: @escaping (ChatError?) -> Void) {
-        ChatClient.shared().chatManager?.pinConversation(conversationId, isPinned: false, completionBlock: { error in
+        ChatClient.shared().chatManager?.pinConversation(conversationId, isPinned: false, completionBlock: { [weak self] error in
+            self?.handleResult(error: error, type: .unpin)
             completion(error)
         })
     }
     
     public func deleteConversation(conversationId: String, completion: @escaping (ChatError?) -> Void) {
         if let conversation = ChatClient.shared().chatManager?.getConversationWithConvId(conversationId) {
-            ChatClient.shared().chatManager?.deleteServerConversation(conversationId, conversationType: conversation.type, isDeleteServerMessages: true,completion: { id, error in
+            ChatClient.shared().chatManager?.deleteServerConversation(conversationId, conversationType: conversation.type, isDeleteServerMessages: true,completion: { [weak self] id, error in
                 if error == nil,conversationId == id ?? "" {
                     ChatClient.shared().chatManager?.deleteConversation(conversationId, isDeleteMessages: true, completion: { localId, error in
                         completion(error)
@@ -166,6 +180,7 @@ extension ConversationServiceImplement: ConversationService {
                 } else {
                     completion(error)
                 }
+                self?.handleResult(error: error, type: .delete)
             })
         }
         
@@ -185,6 +200,26 @@ extension ConversationServiceImplement: ConversationService {
     public func unbindConversationEventsListener(listener: ConversationServiceListener) {
         if self.responseDelegates.contains(listener) {
             self.responseDelegates.remove(listener)
+        }
+    }
+    
+    
+    public func registerEmergencyListener(listener: ConversationEmergencyListener) {
+        if self.eventsNotifiers.contains(listener) {
+            return
+        }
+        self.eventsNotifiers.add(listener)
+    }
+    
+    public func unregisterEmergencyListener(listener: ConversationEmergencyListener) {
+        if self.eventsNotifiers.contains(listener) {
+            self.eventsNotifiers.remove(listener)
+        }
+    }
+    
+    private func handleResult(error: ChatError?,type: ConversationEmergencyType) {
+        for listener in self.eventsNotifiers.allObjects {
+            listener.onRequestResult(error: error, type: type)
         }
     }
     

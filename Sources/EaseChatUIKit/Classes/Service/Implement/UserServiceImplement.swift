@@ -22,7 +22,7 @@ import UIKit
             if !success {
                 let errorInfo = error?.errorDescription ?? ""
                 consoleLogInfo(errorInfo, type: .error)
-                UIViewController.currentController?.showToast(toast: errorInfo, duration: 3)
+                completion(error)
             }
             completion(error)
         }
@@ -62,7 +62,6 @@ extension UserServiceImplement:UserServiceProtocol {
             for userId in userIds {
                 if let info = dic[userId] {
                     if let user = self?.convertToUser(info: info) {
-//                        ChatroomContext.shared?.usersMap?[userId] = user
                         users.append(user)
                     }
                 }
@@ -99,13 +98,6 @@ extension UserServiceImplement:UserServiceProtocol {
         user.userId = info.userId ?? ""
         user.nickName = info.nickname ?? ""
         user.avatarURL = info.avatarUrl ?? ""
-        user.gender = info.gender
-        if let ext = info.ext{
-            let extMap = ext.chat.jsonToDictionary()
-            if let identity = extMap["identity"] as? String {
-                user.identity = identity
-            }
-        }
         return user
     }
     
@@ -114,10 +106,6 @@ extension UserServiceImplement:UserServiceProtocol {
         info.userId = user.userId
         info.nickname = user.nickName
         info.avatarUrl = user.avatarURL
-        info.gender = user.gender
-        //In addition to the existing user attribute fields in the UserInfo object of the SDK, other extended fields are placed in the ext map and serialized into json string to interact with other terminals.
-        let ext = ["identity":user.identity].chat.jsonString
-        info.ext = ext
         return info
     }
     
@@ -174,18 +162,15 @@ extension UserServiceImplement: ChatClientListener {
 @objcMembers final public class User:NSObject, UserInfoProtocol {
     
     public func toJsonObject() -> Dictionary<String, Any>? {
-        ["userId":self.userId,"nickName":self.nickName,"avatarURL":self.avatarURL,"identity":self.identity,"gender":self.gender]
+        ["userId":self.userId,"nickName":self.nickName,"avatarURL":self.avatarURL]
     }
     
-    public var identity: String = ""
     
     public var userId: String = ""
     
     public var nickName: String = ""
     
     public var avatarURL: String = ""
-    
-    public var gender: Int = 1
     
     public var mute: Bool = false
     

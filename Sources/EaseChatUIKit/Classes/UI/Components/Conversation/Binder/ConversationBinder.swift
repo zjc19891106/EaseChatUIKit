@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AudioToolbox
 
 
 /// Bind service and driver
@@ -51,10 +52,22 @@ import Foundation
         self.multiService?.unbindMultiDeviceListener(listener: self)
         self.multiService?.bindMultiDeviceListener(listener: self)
         self.driver?.addActionHandler(actionHandler: self)
-        self.loadExistLocalDataOtherwiseFetchServer()
+        self.loadExistLocalDataIfEmptyOtherwiseFetchServer()
     }
     
-    @objc public func loadExistLocalDataOtherwiseFetchServer() {
+    /// Register to monitor when certain emergencies occur
+    /// - Parameter listener: ``ConversationEmergencyListener``
+    @objc public func registerEventsListener(listener: ConversationEmergencyListener) {
+        self.service?.registerEmergencyListener(listener: listener)
+    }
+    
+    /// When you don’t want to listen to the registered events above, you can use this method to clear the registration.
+    /// - Parameter listener: ``ConversationEmergencyListener``
+    @objc public func unregisterEventsListener(listener: ConversationEmergencyListener) {
+        self.service?.unregisterEmergencyListener(listener: listener)
+    }
+    
+    @objc public func loadExistLocalDataIfEmptyOtherwiseFetchServer() {
         self.service?.loadExistConversations(completion: { [weak self] result, error in
             if error == nil {
                 self?.driver?.refreshProfiles(infos: result)
@@ -79,6 +92,11 @@ import Foundation
 
 //MARK: - ConversationListActionEventsDelegate
 extension ConversationBinder: ConversationListActionEventsDelegate {
+    
+    public func onConversationListOccurErrorWhenFetchServer() {
+        self.service?.fetchAllConversations(completion: nil)
+    }
+    
     public func onConversationListEndScrollNeededDisplayInfos(ids: [String]) {
         var privateChats = [String]()
         var groupChats = [String]()
@@ -210,12 +228,30 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
     }
 }
 
+
 //MARK: - ConversationServiceListener
 extension ConversationBinder: ConversationServiceListener {
     public func onConversationLastMessageUpdate(message: ChatMessage, info: ConversationInfo) {
         if let infos = ChatClient.shared().chatManager?.getAllConversations(true) {
-            self.driver?.refreshList(infos: self.mapper(objects: infos))
+            let items = self.mapper(objects: infos)
+            self.driver?.refreshList(infos: items)
+            for item in items {
+                if !item.noDisturb {
+                    self.playNewMessageSound()
+                }
+            }
         }
+    }
+    
+    private func playNewMessageSound() {
+        let path = "/System/Library/Audio/UISounds/sms-received1.caf"
+        let audioPath = NSURL(fileURLWithPath: path)
+        var soundID: SystemSoundID = 0
+        let completion: @convention(c) (SystemSoundID, UnsafeMutableRawPointer?) -> Void = { soundId, pointer in
+            AudioServicesDisposeSystemSoundID(soundId)
+            }
+        AudioServicesCreateSystemSoundID(audioPath, &soundID) // Register the sound completion callback.
+        AudioServicesAddSystemSoundCompletion(soundID, nil, nil, completion, nil)
     }
     
     

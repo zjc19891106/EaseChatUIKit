@@ -9,7 +9,7 @@ import UIKit
 
 @objcMembers public class EaseChatUIKitContext: NSObject {
     
-    @objc static let shared = EaseChatUIKitContext()
+    @objc static let shared: EaseChatUIKitContext? = EaseChatUIKitContext()
 
     public var currentUser: UserInfoProtocol?
 }

@@ -46,11 +46,11 @@ import UIKit
     private var searchText = ""
     
     lazy var searchHeader: SearchHeaderBar = {
-        SearchHeaderBar(frame: CGRect(x: 0, y: StatusBarHeight+10, width: ScreenWidth, height: 44), displayStyle: .withBack)
+        SearchHeaderBar(frame: CGRect(x: 0, y: StatusBarHeight+10, width: ScreenWidth, height: 44), displayStyle: .withBack).backgroundColor(.orange)
     }()
     
     lazy var searchList: UITableView = {
-        UITableView(frame: CGRect(x: 0, y: self.searchHeader.frame.maxY+4, width: ScreenWidth, height: ScreenHeight-self.searchHeader.frame.maxY-BottomBarHeight), style: .plain).delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none)
+        UITableView(frame: CGRect(x: 0, y: self.searchHeader.frame.maxY+10, width: self.view.frame.width, height: self.view.frame.height-self.searchHeader.frame.maxY-BottomBarHeight-10), style: .plain).delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).rowHeight(Appearance.Conversation.rowHeight).backgroundColor(.clear)
     }()
     
     public private(set) lazy var empty: EmptyStateView = {
@@ -65,7 +65,9 @@ import UIKit
     open override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        self.view.backgroundColor = UIColor.theme.neutralColor98
         self.view.addSubViews([self.searchHeader,self.searchList])
+        Theme.registerSwitchThemeViews(view: self)
         self.searchHeader.textChanged = { [weak self] in
             guard let `self` = self else { return }
             self.searchText = $0
@@ -77,6 +79,8 @@ import UIKit
         }
         self.searchHeader.actionClosure = { [weak self] in
             self?.active = false
+            self?.searchText = ""
+            self?.searchList.reloadData()
             if $0 == .back {
                 self?.pop()
             }
@@ -118,4 +122,10 @@ extension SearchConversationsController: UITableViewDelegate,UITableViewDataSour
     }
     
     
+}
+
+extension SearchConversationsController: ThemeSwitchProtocol {
+    public func switchTheme(style: ThemeStyle) {
+        self.view.backgroundColor = style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98
+    }
 }

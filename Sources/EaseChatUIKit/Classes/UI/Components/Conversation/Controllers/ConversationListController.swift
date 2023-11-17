@@ -1,5 +1,7 @@
 import UIKit
 
+
+/// When you
 @objc open class ConversationListController: UIViewController {
     
     /// The id of the conversation.
@@ -71,6 +73,9 @@ import UIKit
         self.navigation.leftItemClick = { [weak self] in
             self?.pop()
         }
+        //If you want to listen for notifications about the success or failure of some requests and other events, you can add the following listeners
+//        ConversationListController().binder.registerEventsListener(listener: <#T##ConversationEmergencyListener#>)
+//        ConversationListController().binder.unregisterEventsListener(listener: <#T##ConversationEmergencyListener#>)
     }
     
     private func pop() {

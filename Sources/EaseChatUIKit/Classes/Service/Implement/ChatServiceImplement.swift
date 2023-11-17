@@ -38,7 +38,7 @@ extension ChatServiceImplement: ChatService {
     }
     
     public func sendMessage(to: String, body: ChatMessageBody, completion: @escaping (ChatError?, ChatMessage?) -> Void) {
-        let json = EaseChatUIKitContext.shared.currentUser?.toJsonObject() ?? [:]
+        let json = EaseChatUIKitContext.shared?.currentUser?.toJsonObject() ?? [:]
         let message = ChatMessage(conversationID: to, body: body, ext: ["ChatUIKitUserInfo":json])
         message.chatType = .chat
         ChatClient.shared().chatManager?.send(message, progress: nil, completion: { message, error in
@@ -47,7 +47,7 @@ extension ChatServiceImplement: ChatService {
     }
     
     public func sendGroupMessage(to: String, body: ChatMessageBody, completion: @escaping (ChatError?, ChatMessage?) -> Void) {
-        let json = EaseChatUIKitContext.shared.currentUser?.toJsonObject() ?? [:]
+        let json = EaseChatUIKitContext.shared?.currentUser?.toJsonObject() ?? [:]
         let message = ChatMessage(conversationID: to, body: body, ext: ["ChatUIKitUserInfo":json])
         message.chatType = .groupChat
         ChatClient.shared().chatManager?.send(message, progress: nil, completion: { message, error in

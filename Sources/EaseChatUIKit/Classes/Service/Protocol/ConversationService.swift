@@ -17,6 +17,14 @@ import Foundation
     /// - Parameter listener: ``ChannelServiceListener``
     func unbindConversationEventsListener(listener: ConversationServiceListener)
     
+    /// Register emergency listener
+    /// - Parameter listener: ``ConversationEmergencyListener``
+    func registerEmergencyListener(listener: ConversationEmergencyListener)
+    
+    /// Unregister emergency listener
+    /// - Parameter listener: ``ConversationEmergencyListener``
+    func unregisterEmergencyListener(listener: ConversationEmergencyListener)
+    
     /// Get all conversations from database.
     /// - Returns: Array of the ``ChatConversation`` object.
     func loadExistConversations(completion: @escaping ([ConversationInfo],ChatError?) -> Void)
@@ -82,6 +90,32 @@ import Foundation
     /// The read status of the conversation message changes.
     /// - Parameter info: The info of the conversation.
     func onConversationMessageAlreadyReadOnOtherDevice(info: ConversationInfo)
+    
+    /// The last message of conversation changes.
+    /// - Parameters:
+    ///   - message: ``ChatMessage``
+    ///   - info: ``ConversationInfo``
+    func onConversationLastMessageUpdate(message: ChatMessage,info: ConversationInfo)
+}
+
+@objc public enum ConversationEmergencyType: UInt8 {
+    case pin
+    case unpin
+    case delete
+    case setSilent
+    case clearSilent
+    case fetchSilent
+    case fetchPinned
+    case loadAllMessageFirstLoadUIKit
+}
+
+@objc public protocol ConversationEmergencyListener: NSObjectProtocol {
+    
+    /// You'll receive the result on conversation service request successful or failure.
+    /// - Parameters:
+    ///   - error: .Success ``ChatError`` is nil.
+    ///   - type: ``ConversationEmergencyType``
+    func onRequestResult(error: ChatError?,type: ConversationEmergencyType)
     
     /// The last message of conversation changes.
     /// - Parameters:

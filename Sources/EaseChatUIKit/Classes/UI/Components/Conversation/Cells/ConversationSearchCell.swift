@@ -28,6 +28,12 @@ import UIKit
         fatalError("init(coder:) has not been implemented")
     }
     
+    open override func layoutSubviews() {
+        super.layoutSubviews()
+        self.avatar.center = CGPoint(x: self.avatar.center.x, y: self.contentView.center.y)
+        self.nickName.center = CGPoint(x: self.nickName.center.x, y: self.contentView.center.y)
+    }
+    
     func refresh(info: ConversationInfo,keyword: String) {
         let nickName = info.nickName.isEmpty ? info.id:info.nickName
         self.nickName.attributedText = self.highlightKeywords(keyword: keyword, in: nickName)

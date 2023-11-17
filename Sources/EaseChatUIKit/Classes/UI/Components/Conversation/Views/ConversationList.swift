@@ -34,12 +34,17 @@ import UIKit
     private var indexMap: [String:Int] = [:]
         
     private lazy var empty: EmptyStateView = {
-        EmptyStateView(frame: CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height),emptyImage: UIImage(named: "empty",in: .chatBundle, with: nil)).backgroundColor(.clear)
+        EmptyStateView(frame: CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height),emptyImage: UIImage(named: "empty",in: .chatBundle, with: nil), onRetry: { [weak self] in
+            guard let `self` = self else { return }
+            for listener in self.eventHandlers.allObjects {
+                listener.onConversationListOccurErrorWhenFetchServer()
+            }
+        }).backgroundColor(.clear)
     }()
     
     @objc required public override init(frame: CGRect, style: UITableView.Style) {
         super.init(frame: frame, style: style)
-        self.delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).register(ComponentsRegister.shared.ConversationCell.self, "EaseChatUIKit.ConversationCell")
+        self.delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).register(ComponentsRegister.shared.ConversationCell.self, "EaseChatUIKit.ConversationCell").rowHeight(Appearance.Conversation.rowHeight)
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressedAction(gesture:)))
         longPress.minimumPressDuration = 1
         self.addGestureRecognizer(longPress)
@@ -327,6 +332,8 @@ extension ConversationList: ThemeSwitchProtocol {
 //MARK: - ConversationListActionEventsDelegate
 /// Session list touch event callback proxy
 @objc public protocol ConversationListActionEventsDelegate: NSObjectProtocol {
+    
+    func onConversationListOccurErrorWhenFetchServer()
     
     /// The method will called on conversation list end scroll,then it will ask you for the session nickname and avatar data and then refresh it.
     /// - Parameter ids: [conversationId]

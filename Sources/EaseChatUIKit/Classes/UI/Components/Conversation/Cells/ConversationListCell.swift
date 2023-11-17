@@ -35,6 +35,16 @@ import UIKit
         Theme.registerSwitchThemeViews(view: self)
     }
     
+    open override func layoutSubviews() {
+        super.layoutSubviews()
+        self.avatar.frame = CGRect(x: 16, y: (self.contentView.frame.height-50)/2.0, width: 50, height: 50)
+        self.nickName.frame = CGRect(x: self.avatar.frame.maxX+12, y: self.avatar.frame.minX+4, width: self.contentView.frame.width-self.avatar.frame.maxX-12-16-50, height: 16)
+        self.date.frame = CGRect(x: self.contentView.frame.width-66, y: self.nickName.frame.minY+2, width: 50, height: 16)
+        self.content.frame = CGRect(x: self.avatar.frame.maxX+12, y: self.nickName.frame.maxY+2, width: self.contentView.frame.width-self.avatar.frame.maxX-12-16-50, height: 16)
+        self.badge.frame = CGRect(x: self.contentView.frame.width-48, y: self.nickName.frame.maxY+5, width: 32, height: 18)
+        self.dot.frame =  CGRect(x: self.contentView.frame.width-28, y: self.nickName.frame.maxY+10, width: 8, height: 8)
+    }
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -83,6 +93,10 @@ extension ConversationListCell: ThemeSwitchProtocol {
     public var type = ChatConversationType.chat
     
     public var pinned = false
+    
+    required public override init() {
+        
+    }
     
 }
 

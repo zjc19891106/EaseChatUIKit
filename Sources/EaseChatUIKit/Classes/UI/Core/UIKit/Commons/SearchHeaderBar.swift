@@ -34,16 +34,20 @@ import UIKit
         UIButton(type: .custom).frame(CGRect(x: 8, y: (self.frame.height-24)/2.0, width: 24, height: 24)).image(UIImage(named: "back", in: .chatBundle, with: nil), .normal).tag(0).addTargetFor(self, action: #selector(buttonAction(sender:)), for: .touchUpInside).backgroundColor(.clear)
     }()
     
-    lazy var leftView: UIImageView = {
-        UIImageView(frame: CGRect(x: 0, y: 0, width: 36, height: 36)).contentMode(.scaleAspectFit).backgroundColor(.clear)
+    lazy var leftView: UIView = {
+        UIView(frame: CGRect(x: 0, y: 0, width: self.frame.height-8, height: self.frame.height-8)).backgroundColor(.clear)
+    }()
+    
+    lazy var icon: UIImageView = {
+        UIImageView(frame: CGRect(x: 8, y: 4, width: self.leftView.frame.height-8, height: self.leftView.frame.height-8)).contentMode(.scaleAspectFit).backgroundColor(.clear)
     }()
     
     lazy var searchField: UITextField = {
-        UITextField(frame: CGRect(x: self.back.frame.maxX+12, y: (self.frame.height-36)/2.0, width: self.frame.width-76-26-self.back.frame.maxX-12-8, height: 36)).font(UIFont.theme.bodyLarge).clearButtonMode(.whileEditing).leftView(self.leftView, .always).cornerRadius(.small).delegate(self)
+        UITextField(frame: CGRect(x: self.back.frame.maxX+12, y: 4, width: self.frame.width-68-16-self.back.frame.maxX-12-8, height: self.frame.height-8)).font(UIFont.theme.bodyLarge).clearButtonMode(.whileEditing).leftView(self.leftView, .always).cornerRadius(.small).delegate(self)
     }()
     
     lazy var cancel: UIButton = {
-        UIButton(type: .custom).frame(CGRect(x: self.frame.width-76-26, y: (self.frame.height-26)/2.0, width: 76, height: 26)).font(UIFont.theme.labelMedium).textColor(UIColor.theme.primaryColor5, .normal).tag(1).addTargetFor(self, action: #selector(buttonAction(sender:)), for: .touchUpInside).backgroundColor(.clear).title("Cancel".chat.localize, .normal)
+        UIButton(type: .custom).frame(CGRect(x: self.frame.width-68-16, y: (self.frame.height-16)/2.0, width: 68, height: 16)).font(UIFont.theme.labelMedium).textColor(UIColor.theme.primaryColor5, .normal).tag(1).addTargetFor(self, action: #selector(buttonAction(sender:)), for: .touchUpInside).backgroundColor(.clear).title("Cancel".chat.localize, .normal)
     }()
     
     @objc public required convenience init(frame: CGRect, displayStyle: SearchHeaderBarDisplayStyle) {
@@ -51,9 +55,10 @@ import UIKit
         if displayStyle == .withBack {
             self.addSubViews([self.back,self.searchField,self.cancel])
         } else {
-            self.searchField.frame = CGRect(x: 12, y: (self.frame.height-36)/2.0, width: self.frame.width-76-26-8, height: 36)
+            self.searchField.frame = CGRect(x: 12, y: (self.frame.height-36)/2.0, width: self.frame.width-68-16-8, height: 36)
             self.addSubViews([self.searchField,self.cancel])
         }
+        self.leftView.addSubview(self.icon)
         self.searchField.returnKeyType = .search
         Theme.registerSwitchThemeViews(view: self)
         self.switchTheme(style: Theme.style)
@@ -97,7 +102,7 @@ extension SearchHeaderBar: ThemeSwitchProtocol {
             image = image?.withTintColor(UIColor.theme.neutralColor3, renderingMode: .automatic)
             searchIcon = searchIcon?.withTintColor(UIColor.theme.neutralColor6, renderingMode: .automatic)
         }
-        self.leftView.image = searchIcon
+        self.icon.image = searchIcon
         self.searchField.attributedPlaceholder = NSAttributedString {
             AttributedText(" "+"Search".chat.localize).foregroundColor(style == .dark ? UIColor.theme.neutralColor4:UIColor.theme.neutralColor6)
         }

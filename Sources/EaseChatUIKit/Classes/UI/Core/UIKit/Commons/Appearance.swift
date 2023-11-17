@@ -61,6 +61,8 @@ import UIKit
     
     @objcMembers final public class Conversation: NSObject {
         
+        public static var rowHeight = CGFloat(76)
+        
         public static var swipeLeftActions: [UIContextualActionType] = [.mute,.pin,.delete]
         
         public static var swipeRightActions: [UIContextualActionType] = [.more,.read]

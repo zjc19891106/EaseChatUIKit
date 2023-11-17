@@ -19,12 +19,6 @@ import Foundation
     /// User's avatar url
     var avatarURL: String { set get }
     
-    /// The user's gender. If you didn't set, the default value is 0.  For example you can set 1 for male and 2 for female
-    var gender: Int { set get }
-    
-    /// User's identity picture url
-    var identity: String {set get}
-    
     func toJsonObject() -> Dictionary<String,Any>?
 }
 
