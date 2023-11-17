@@ -32,7 +32,7 @@ public protocol EaseProfileProvider {
     /// - Parameters:
     ///   - id: Conversation's id.
     ///   - type: ``ChatConversationType``
-    /// - Returns: ``EaseProfile``
+    /// - Returns: ``EaseProfileProtocol``
     func getProfile(id: String, type: ChatConversationType) -> EaseProfileProtocol
     
     /// Coroutine obtains user information asynchronously.
@@ -54,13 +54,13 @@ public extension EaseProfileProvider {
     /// - Parameters:
     ///   - id: Conversation's id.
     ///   - type: ``ChatConversationType``
-    /// - Returns: ``EaseProfile``
+    /// - Returns: ``EaseProfileProtocol``
     @objc optional func getProfile(id: String, type: ChatConversationType) -> EaseProfileProtocol
     
     /// Need to obtain the list display information on the current screen.
     /// - Parameters:
     ///   - profilesMap: The map parameter key is the conversation type value is the corresponding conversation id string array.
-    ///   - completion: Callback,obtain Array of the ``EaseProfile`` object.
+    ///   - completion: Callback,obtain Array of the ``EaseProfileProtocol`` object.
     func fetchProfiles(profilesMap: [Int:[String]],completion: @escaping ([EaseProfileProtocol]) -> Void)
 }
 

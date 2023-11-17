@@ -1,6 +1,6 @@
 import UIKit
 
-@objc open class ConversationController: UIViewController {
+@objc open class ConversationListController: UIViewController {
     
     /// The id of the conversation.
     public private(set) var id = ""
@@ -19,21 +19,20 @@ import UIKit
     
     public private(set) var binder: ConversationBinder = ConversationBinder()
     
-    /// ``ConversationController`` init method.Only available in Objective-C language.
+    /// ``ConversationListController`` init method.Only available in Objective-C language.
     /// - Parameters:
-    ///   - id: The id of the conversation.
     ///   - providerOC: The object of conform ``EaseProfileProviderOC``.
-    @objc public required convenience init(id: String,providerOC: EaseProfileProviderOC? = nil) {
+    @objc public required convenience init(providerOC: EaseProfileProviderOC? = nil) {
         self.init()
         self.id = id
         self.binder = ConversationBinder(providerOC: providerOC)
     }
     
-    /// ``ConversationController`` init method.Only available in Swift language.
+    /// ``ConversationListController`` init method.Only available in Swift language.
     /// - Parameters:
     ///   - id: The id of the conversation.
     ///   - provider: The object of conform ``EaseProfileProvider``.
-    public required convenience init(id: String,provider: EaseProfileProvider? = nil) {
+    public required convenience init(provider: EaseProfileProvider? = nil) {
         self.init()
         self.id = id
         self.binder = ConversationBinder(provider: provider)
@@ -63,7 +62,7 @@ import UIKit
         super.viewDidLoad()
         self.view.addSubViews([self.navigation,self.search,self.conversationList])
         //Bind UI driver and service
-        self.binder.bind(driver: self.conversationList, service: ConversationServiceImplement(conversationId: self.id), multi: MultiDeviceServiceImplement())
+        self.binder.bind(driver: self.conversationList)
         //Conversation list click push to message list controller.
         self.binder.toChat = { [weak self] in
             self?.toChat(indexPath: $0, info: $1)
@@ -106,9 +105,9 @@ import UIKit
     
     @objc private func searchAction() {
         if self.navigationController != nil {
-            self.navigationController?.pushViewController(SearchConversationController(searchInfos: self.conversationList.datas), animated: true)
+            self.navigationController?.pushViewController(SearchConversationsController(searchInfos: self.conversationList.datas), animated: true)
         } else {
-            self.navigationController?.present(SearchConversationController(searchInfos: self.conversationList.datas), animated: true)
+            self.navigationController?.present(SearchConversationsController(searchInfos: self.conversationList.datas), animated: true)
         }
     }
 }

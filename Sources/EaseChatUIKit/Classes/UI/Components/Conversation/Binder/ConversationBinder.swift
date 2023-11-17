@@ -37,34 +37,24 @@ import Foundation
     
     private weak var driver: IConversationListDriver?
     
-    private var service: ConversationService? {
-        didSet {
-            self.service?.unbindConversationEventsListener(listener: self)
-            self.service?.bindConversationEventsListener(listener: self)
-        }
-    }
+    private var service: ConversationService? = ConversationServiceImplement()
     
-    private var multiService: MultiDeviceService? {
-        didSet {
-            self.multiService?.unbindMultiDeviceListener(listener: self)
-            self.multiService?.bindMultiDeviceListener(listener: self)
-        }
-    }
+    private var multiService: MultiDeviceService?  = MultiDeviceServiceImplement()
     
     /// Bind UI driver and service
     /// - Parameters:
     ///   - driver: The object of conform``IConversationListDriver``.
-    ///   - service: The object of conform``ConversationService``.
-    ///   - multi: The object of conform``MultiDeviceService``.
-    func bind(driver: IConversationListDriver,service: ConversationService,multi: MultiDeviceService) {
+    @objc public func bind(driver: IConversationListDriver) {
         self.driver = driver
-        self.service = service
-        self.multiService = multi
+        self.service?.unbindConversationEventsListener(listener: self)
+        self.service?.bindConversationEventsListener(listener: self)
+        self.multiService?.unbindMultiDeviceListener(listener: self)
+        self.multiService?.bindMultiDeviceListener(listener: self)
         self.driver?.addActionHandler(actionHandler: self)
         self.loadExistLocalDataOtherwiseFetchServer()
     }
     
-    func loadExistLocalDataOtherwiseFetchServer() {
+    @objc public func loadExistLocalDataOtherwiseFetchServer() {
         self.service?.loadExistConversations(completion: { [weak self] result, error in
             if error == nil {
                 self?.driver?.refreshProfiles(infos: result)
@@ -74,7 +64,7 @@ import Foundation
         })
     }
     
-    func destroyed() {
+    @objc public func destroyed() {
         self.service?.unbindConversationEventsListener(listener: self)
         self.multiService?.unbindMultiDeviceListener(listener: self)
         self.driver = nil
@@ -191,7 +181,7 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
             case .read:
                 info.unreadCount = 0
                 self.driver?.swipeMenuOperation(info: info, type: .read)
-                self.service?.markAllMessagesAsRead()
+                self.service?.markAllMessagesAsRead(conversationId: info.id)
             case .more: self.moreAction(info: info)
             }
         }

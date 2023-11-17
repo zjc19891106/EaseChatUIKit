@@ -18,16 +18,9 @@ import UIKit
     @UserDefault("EaseChatUIKit_conversation_mute_map", defaultValue: Dictionary<String,Int>()) private var muteMap
     
     private var responseDelegates: NSHashTable<ConversationServiceListener> = NSHashTable<ConversationServiceListener>.weakObjects()
-                
-    private var conversationId = ""
     
-    public var chatConversation: ChatConversation? {
-        ChatClient.shared().chatManager?.getConversationWithConvId(self.conversationId)
-    }
-    
-    @objc public required init(conversationId: String) {
+    public override init() {
         super.init()
-        self.conversationId = conversationId
         ChatClient.shared().chatManager?.add(self, delegateQueue: .main)
     }
     
@@ -178,6 +171,10 @@ extension ConversationServiceImplement: ConversationService {
         
     }
     
+    public func markAllMessagesAsRead(conversationId: String) {
+        ChatClient.shared().chatManager?.getConversationWithConvId(conversationId)?.markAllMessages(asRead: nil)
+    }
+    
     public func bindConversationEventsListener(listener: ConversationServiceListener) {
         if self.responseDelegates.contains(listener) {
             return
@@ -189,34 +186,6 @@ extension ConversationServiceImplement: ConversationService {
         if self.responseDelegates.contains(listener) {
             self.responseDelegates.remove(listener)
         }
-    }
-    
-    public func removeLocalMessage(messageId: String) {
-        self.chatConversation?.deleteMessage(withId: messageId, error: nil)
-    }
-    
-    public func removeHistoryMessages() {
-        self.chatConversation?.deleteAllMessages(nil)
-    }
-    
-    public func markMessageAsRead(messageId: String) {
-        self.chatConversation?.markMessageAsRead(withId: messageId, error: nil)
-    }
-    
-    public func markAllMessagesAsRead() {
-        self.chatConversation?.markAllMessages(asRead: nil)
-    }
-    
-    public func loadMessages(start messageId: String, pageSize: UInt, completion: @escaping (ChatError?, [ChatMessage]) -> Void) {
-        self.chatConversation?.loadMessagesStart(fromId: messageId, count: Int32(pageSize), searchDirection: .up,completion: { messages, error in
-            completion(error,messages ?? [])
-        })
-    }
-    
-    public func searchMessage(keyword: String, pageSize: UInt, userId: String, completion: @escaping (ChatError?, [ChatMessage]) -> Void) {
-        self.chatConversation?.loadMessages(withKeyword: keyword, timestamp: 0, count: Int32(pageSize), fromUser: userId, searchDirection: .up,completion: { messages, error in
-            completion(error,messages ?? [])
-        })
     }
     
     private func mapper(objects: [ChatConversation]) -> [ConversationInfo] {

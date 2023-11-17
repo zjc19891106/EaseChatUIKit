@@ -10,8 +10,11 @@ import UIKit
 @objc public class ChatServiceImplement: NSObject {
     private var responseDelegates: NSHashTable<ChatResponseListener> = NSHashTable<ChatResponseListener>.weakObjects()
     
-    @objc public override init() {
+    private var to = ""
+    
+    @objc required public init(to: String) {
         super.init()
+        self.to = to
         ChatClient.shared().chatManager?.add(self, delegateQueue: .main)
     }
     
@@ -52,7 +55,33 @@ extension ChatServiceImplement: ChatService {
         })
     }
     
+    public func removeLocalMessage(messageId: String) {
+        ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.deleteMessage(withId: messageId, error: nil)
+    }
     
+    public func removeHistoryMessages() {
+        ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.deleteAllMessages(nil)
+    }
+    
+    public func markMessageAsRead(messageId: String) {
+        ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.markMessageAsRead(withId: messageId, error: nil)
+    }
+    
+    public func markAllMessagesAsRead() {
+        ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.markAllMessages(asRead: nil)
+    }
+    
+    public func loadMessages(start messageId: String, pageSize: UInt, completion: @escaping (ChatError?, [ChatMessage]) -> Void) {
+        ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.loadMessagesStart(fromId: messageId, count: Int32(pageSize), searchDirection: .up,completion: { messages, error in
+            completion(error,messages ?? [])
+        })
+    }
+    
+    public func searchMessage(keyword: String, pageSize: UInt, userId: String, completion: @escaping (ChatError?, [ChatMessage]) -> Void) {
+        ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.loadMessages(withKeyword: keyword, timestamp: 0, count: Int32(pageSize), fromUser: userId, searchDirection: .up,completion: { messages, error in
+            completion(error,messages ?? [])
+        })
+    }
 }
 
 extension ChatServiceImplement: ChatEventsListener {

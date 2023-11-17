@@ -7,7 +7,7 @@
 
 import UIKit
 
-@objc open class SearchConversationController: UIViewController {
+@objc open class SearchConversationsController: UIViewController {
     
     private var active = false {
         didSet {
@@ -86,7 +86,7 @@ import UIKit
 
 }
 
-extension SearchConversationController: UITableViewDelegate,UITableViewDataSource {
+extension SearchConversationsController: UITableViewDelegate,UITableViewDataSource {
     
     private func pop() {
         if self.navigationController != nil {
