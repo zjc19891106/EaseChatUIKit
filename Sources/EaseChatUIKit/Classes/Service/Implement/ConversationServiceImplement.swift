@@ -232,10 +232,10 @@ extension ConversationServiceImplement: ConversationService {
             conversation.type = $0.type
             conversation.pinned = $0.isPinned
             if EaseChatUIKitClient.shared.option.option_chat.saveConversationInfo {
-                if let nickName = $0.ext["EaseChatUIKit_nickName"] as? String {
+                if let nickName = EaseChatUIKitContext.shared?.conversationsCache?[$0.conversationId]?.nickName as? String {
                     conversation.nickName = nickName
                 }
-                if let avatarURL = $0.ext["EaseChatUIKit_avatarURL"] as? String {
+                if let avatarURL = EaseChatUIKitContext.shared?.conversationsCache?["$0.conversationId"]?.avatarURL as? String {
                     conversation.avatarURL = avatarURL
                 }
             }

@@ -130,11 +130,7 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
         self.driver?.refreshProfiles(infos: infos)
         if EaseChatUIKitClient.shared.option.option_chat.saveConversationInfo {
             for info in infos {
-                let conversation = ChatClient.shared().chatManager?.getConversationWithConvId(info.id)
-                var ext = conversation?.ext
-                ext?["EaseChatUIKit_avatarURL"] = info.avatarURL
-                ext?["EaseChatUIKit_nickName"] = info.nickName
-                conversation?.ext = ext
+                EaseChatUIKitContext.shared?.conversationsCache?[info.id] = info
             }
         }
     }

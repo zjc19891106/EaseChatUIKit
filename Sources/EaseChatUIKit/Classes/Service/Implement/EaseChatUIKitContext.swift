@@ -12,4 +12,6 @@ import UIKit
     @objc static let shared: EaseChatUIKitContext? = EaseChatUIKitContext()
 
     public var currentUser: UserInfoProtocol?
+    
+    public var conversationsCache: Dictionary<String,EaseProfileProtocol>? = [:]
 }
