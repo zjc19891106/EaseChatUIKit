@@ -46,7 +46,7 @@ import UIKit
     private var searchText = ""
     
     lazy var searchHeader: SearchHeaderBar = {
-        SearchHeaderBar(frame: CGRect(x: 0, y: StatusBarHeight+10, width: ScreenWidth, height: 44), displayStyle: .withBack).backgroundColor(.orange)
+        SearchHeaderBar(frame: CGRect(x: 0, y: StatusBarHeight+10, width: ScreenWidth, height: 44), displayStyle: .withBack).backgroundColor(.clear)
     }()
     
     lazy var searchList: UITableView = {
@@ -54,7 +54,9 @@ import UIKit
     }()
     
     public private(set) lazy var empty: EmptyStateView = {
-        EmptyStateView(frame: CGRect(x: 0, y: 0, width: self.searchList.frame.width, height: self.searchList.frame.height),emptyImage: UIImage(named: "empty",in: .chatBundle, with: nil))
+        EmptyStateView(frame: CGRect(x: 0, y: 0, width: self.searchList.frame.width, height: self.searchList.frame.height),emptyImage: UIImage(named: "empty",in: .chatBundle, with: nil)) {
+            
+        }
     }()
     
     @objc public required convenience init(searchInfos: [ConversationInfo]) {

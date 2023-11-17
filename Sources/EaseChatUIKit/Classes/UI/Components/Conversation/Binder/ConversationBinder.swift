@@ -232,7 +232,7 @@ extension ConversationBinder: ConversationServiceListener {
             let items = self.mapper(objects: infos)
             self.driver?.refreshList(infos: items)
             for item in items {
-                if !item.noDisturb {
+                if !item.noDisturb,EaseChatUIKitClient.shared.option.option_chat.soundOnReceivedNewMessage {
                     self.playNewMessageSound()
                 }
             }

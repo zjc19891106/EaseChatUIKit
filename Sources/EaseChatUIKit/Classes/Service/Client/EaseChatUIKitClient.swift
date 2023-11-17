@@ -15,6 +15,9 @@ import Foundation
         
         /// Prioritize pulling messages from the server.
         var fetchServerHistoryMessages = false
+        
+        /// Whether to play a sound when new messages are received
+        var soundOnReceivedNewMessage = true
     }
     
     @objcMembers public class UIOptions: NSObject {
