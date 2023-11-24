@@ -47,8 +47,8 @@ import UIKit
             if let userInfo = notify.userInfo {
                 if let id = userInfo["id"] as? String {
                     if let item = self?.datas.first(where: { $0.id == id }) {
-                        if let pin = userInfo["value"] as? Bool {
-                            item.pinned = pin
+                        if let doNotDisturb = userInfo["value"] as? Bool {
+                            item.doNotDisturb = doNotDisturb
                         }
                     }
                 }
