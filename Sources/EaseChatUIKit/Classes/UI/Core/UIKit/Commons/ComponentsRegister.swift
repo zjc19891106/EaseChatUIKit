@@ -17,6 +17,8 @@ import UIKit
     
     public var ConversationSearchResultCell: ConversationSearchCell.Type = ConversationSearchCell.self
     
+    public var ContactsCell: ContactCell.Type = ContactCell.self
+    
     public var ChatMessageCell: MessageCell.Type = MessageCell.self
     
     /// Gift barrage list cell class.

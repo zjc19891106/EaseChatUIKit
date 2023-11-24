@@ -47,7 +47,7 @@ public struct PresentedViewComponent {
     ///   - canPanDismiss: ``true`` or ``false``
     ///   - panDismissDirection: pan getsture dismiss direction
     ///   - keyboardTranslationType: keyboardTranslationType
-    ///   - keyboardPadding: `default` is 20.
+    ///   - keyboardPadding: `default` is 0.
     public init(contentSize: CGSize,
                 destination: PresentationDestination = .bottomBaseline,
                 presentTransitionType: TransitionType? = nil,

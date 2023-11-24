@@ -47,22 +47,23 @@ public typealias ChatGroup = EMGroup
 public typealias ChatGroupOption = EMGroupOptions
 public typealias SilentModeResult = EMSilentModeResult
 public typealias SilentModeParam = EMSilentModeParam
+public typealias Contact = EMContact
 
 #elseif canImport(AgoraChat)
 import AgoraChat
 public typealias ChatClient = AgoraChatClient
 public typealias ChatClientListener = AgoraChatClientDelegate
-public typealias ChatEventsListener = AgoraChatChatManagerDelegate
+public typealias ChatEventsListener = AgoraChatManagerDelegate
 public typealias ChatError = AgoraChatError
 public typealias ChatErrorCode = AgoraChatErrorCode
-public typealias ChatMessage = AgoraChatChatMessage
+public typealias ChatMessage = AgoraChatMessage
 public typealias ChatMessageBody = AgoraChatMessageBody
 public typealias ChatTextMessageBody = AgoraChatTextMessageBody
 public typealias ChatCustomMessageBody = AgoraChatCustomMessageBody
-public typealias ChatroomEventsListener = AgoraChatChatroomManagerDelegate
-public typealias ChatRoom = AgoraChatChatroom
+public typealias ChatroomEventsListener = AgoraChatroomManagerDelegate
+public typealias ChatRoom = AgoraChatroom
 public typealias UserInfo = AgoraChatUserInfo
-public typealias ChatroomBeKickedReason = AgoraChatChatroomBeKickedReason
+public typealias ChatroomBeKickedReason = AgoraChatroomBeKickedReason
 public typealias ConnectionState = AgoraChatConnectionState
 public typealias ChatSDKOptions = AgoraChatOptions
 public typealias RecallInfo = AgoraChatRecallMessageInfo
@@ -82,6 +83,7 @@ public typealias ChatGroup = AgoraChatGroup
 public typealias ChatGroupOption = AgoraChatGroupOptions
 public typealias SilentModeResult = AgoraChatSilentModeResult
 public typealias SilentModeParam = AgoraChatSilentModeParam
+public typealias Contact = AgoraChatContact
 #endif
 
 

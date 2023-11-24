@@ -100,6 +100,7 @@ import Foundation
 
 @objc public enum ConversationEmergencyType: UInt8 {
     case pin
+    case read
     case unpin
     case delete
     case setSilent
@@ -115,7 +116,7 @@ import Foundation
     /// - Parameters:
     ///   - error: .Success ``ChatError`` is nil.
     ///   - type: ``ConversationEmergencyType``
-    func onRequestResult(error: ChatError?,type: ConversationEmergencyType)
+    func onResult(error: ChatError?,type: ConversationEmergencyType)
     
     /// The last message of conversation changes.
     /// - Parameters:

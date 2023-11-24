@@ -1,5 +1,5 @@
 //
-//  ComponentsActionEventsRegister.swift
+//  ComponentViewsActionHooker.swift
 //  EaseChatUIKit
 //
 //  Created by 朱继超 on 2023/11/7.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-@objcMembers public class ComponentsActionEventsRegister: NSObject {
+@objcMembers public class ComponentViewsActionHooker: NSObject {
 
     
     @objcMembers public class Conversation: NSObject {
@@ -19,5 +19,12 @@ import UIKit
         static public var didSelected: ((IndexPath,ConversationInfo) -> Void)?
     }
     
+    @objcMembers public class Contact: NSObject {
+        
+        static public var didSelectedContact: ((IndexPath,EaseProfileProtocol) -> Void)?
+        
+        static public var groupWithSelected: ((IndexPath,EaseProfileProtocol) -> Void)?
+    }
+                
     
 }

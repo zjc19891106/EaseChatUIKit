@@ -30,50 +30,51 @@ public typealias ActionClosure = ((ActionSheetItemProtocol) -> Void)
     
     /// The closure to be executed when the action sheet item is selected.
     var action: ActionClosure? {set get}    
-
+    
     /// The image of the action sheet item.
     var image: UIImage? {set get}
 }
 
 @objcMembers public final class ActionSheetItem: NSObject,ActionSheetItemProtocol {
     
-
-/**
- A convenience initializer for creating an `ActionSheetItem` object with a title, type, tag, and action closure.
-
- - Parameters:
+    
+    /**
+     A convenience initializer for creating an `ActionSheetItem` object with a title, type, tag, and action closure.
+     
+     - Parameters:
      - title: The title of the action sheet item.
      - type: The type of the action sheet item.
      - tag: The tag of the action sheet item.
      - action: The closure to be executed when the action sheet item is selected.
-
- - Returns: An `ActionSheetItem` object.
- */
-@objc public convenience init(title: String, type: ActionSheetItemType, tag: String, action: @escaping ActionClosure) {
-    self.init()
-    self.action = action
-    self.title = title
-    self.type = type
-    self.tag = tag
-}
-
-/**
- A convenience initializer for creating an `ActionSheetItem` object with a title, type, and tag.
-
- - Parameters:
+     
+     - Returns: An `ActionSheetItem` object.
+     */
+    @objc public convenience init(title: String, type: ActionSheetItemType, tag: String, action: @escaping ActionClosure) {
+        self.init()
+        self.action = action
+        self.title = title
+        self.type = type
+        self.tag = tag
+    }
+    
+    /**
+     A convenience initializer for creating an `ActionSheetItem` object with a title, type, and tag.
+     
+     - Parameters:
      - title: The title of the action sheet item.
      - type: The type of the action sheet item.
      - tag: The tag of the action sheet item.
-
- - Returns: An `ActionSheetItem` object.
- */
-@objc public convenience init(title: String, type: ActionSheetItemType, tag: String) {
-    self.init()
-    self.title = title
-    self.type = type
-    self.tag = tag
-}
-
+     
+     - Returns: An `ActionSheetItem` object.
+     */
+    @objc public convenience init(title: String, type: ActionSheetItemType, tag: String, image: UIImage? = nil) {
+        self.init()
+        self.title = title
+        self.type = type
+        self.tag = tag
+        self.image = image
+    }
+    
     public var title: String = ""
     public var type: ActionSheetItemType = .normal
     public var action: ActionClosure?

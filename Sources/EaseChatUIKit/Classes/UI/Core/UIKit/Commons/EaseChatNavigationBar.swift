@@ -11,6 +11,14 @@ import UIKit
 /// Navigation  bar of the EaseChatUIKit.
 @objc open class EaseChatNavigationBar: UIView {
     
+    public var userState: UserState = .online {
+        willSet {
+            DispatchQueue.main.async {
+                self.status.backgroundColor = newValue == .online ? UIColor.theme.secondaryColor5:UIColor.theme.neutralColor5
+            }
+        }
+    }
+    
     public var rightItemsClick: ((IndexPath) -> Void)?
     
     public var leftItemClick: (() -> Void)?
@@ -33,6 +41,9 @@ import UIKit
         didSet {
             self.titleLabel.attributedText = nil
             self.titleLabel.text = self.title
+            if self.detail.text == nil || self.detail.text?.isEmpty ?? false {
+                self.titleLabel.center = CGPoint(x: self.titleLabel.center.x, y: self.leftItem.center.y)
+            }
         }
     }
     
@@ -63,8 +74,8 @@ import UIKit
     public private(set) lazy var status: UIImageView = {
         let r = self.avatar.frame.width / 2.0
         let length = CGFloat(sqrtf(Float(r)))
-        let x = (Appearance.avatarRadius == .large ? (r + length + 2):(self.avatar.frame.width-12))
-        let y = (Appearance.avatarRadius == .large ? (r + length + 2):(self.avatar.frame.height-12))
+        let x = (Appearance.avatarRadius == .large ? (r + length + 3):(self.avatar.frame.width-12))
+        let y = (Appearance.avatarRadius == .large ? (r + length + 3):(self.avatar.frame.height-12))
         return UIImageView(frame: CGRect(x: self.avatar.frame.minX+x, y: self.avatar.frame.minY+y, width: 12, height: 12)).backgroundColor(UIColor.theme.secondaryColor5).cornerRadius(.large).layerProperties(UIColor.theme.neutralColor98, 2)
     }()
     
@@ -100,24 +111,38 @@ import UIKit
     ///   - placeHolder: Avatar default image.
     ///   - avatarURL: Avatar url.
     ///   - rightImages: Right buttons kind of `[UIImage]`.
-    @objc required public convenience init(showLeftItem: Bool, textAlignment: NSTextAlignment = .center, placeHolder: UIImage? = nil,avatarURL: String? = nil,rightImages: [UIImage] = []) {
+    ///   - hiddenAvatar: Whether hide avatar or not.
+    @objc required public convenience init(showLeftItem: Bool, textAlignment: NSTextAlignment = .center, placeHolder: UIImage? = nil,avatarURL: String? = nil,rightImages: [UIImage] = [],hiddenAvatar: Bool = false) {
         self.init(frame: CGRect(x: 0, y: 0, width: ScreenWidth, height: NavigationHeight))
         self.showLeft = showLeftItem
-        self.rightImages = Array(rightImages.prefix(3))
+        if rightImages.count > 3 {
+            self.rightImages = Array(rightImages.prefix(3))
+        } else {
+            self.rightImages = rightImages
+        }
         if showLeftItem {
             var width = CGFloat(self.rightImages.count*36)
             if self.avatar.frame.maxX+8 > width {
                 width = self.avatar.frame.maxX+8
             }
-            self.addSubViews([self.leftItem,self.avatar,self.status,self.titleLabel,self.detail,self.rightItems])
-            self.titleLabel.frame = CGRect(x: self.avatar.frame.maxX+8, y: StatusBarHeight+10, width: ScreenWidth - width*2 - 8, height: 22)
+            if hiddenAvatar {
+                self.addSubViews([self.leftItem,self.titleLabel,self.detail,self.rightItems])
+            } else {
+                self.addSubViews([self.leftItem,self.avatar,self.status,self.titleLabel,self.detail,self.rightItems])
+            }
+            self.titleLabel.frame = CGRect(x: (hiddenAvatar ? self.leftItem.frame.maxX:self.avatar.frame.maxX)+8, y: StatusBarHeight+10, width: ScreenWidth - width*2 - 8, height: 22)
             if textAlignment == .center {
                 self.titleLabel.center = CGPoint(x: self.center.x, y: self.titleLabel.center.y)
             }
             self.detail.frame = CGRect(x: self.titleLabel.frame.minX, y: self.titleLabel.frame.maxY, width: self.titleLabel.frame.width, height: 14)
         } else {
-            self.addSubViews([self.avatar,self.status,self.titleLabel,self.detail,self.rightItems])
-            self.titleLabel.frame = CGRect(x: self.avatar.frame.maxX, y: StatusBarHeight+10, width: ScreenWidth - CGFloat(self.rightImages.count*36)*2, height: 22)
+            if hiddenAvatar {
+                self.addSubViews([self.titleLabel,self.detail,self.rightItems])
+            } else {
+                self.addSubViews([self.avatar,self.status,self.titleLabel,self.detail,self.rightItems])
+            }
+            
+            self.titleLabel.frame = CGRect(x: (hiddenAvatar ? self.leftItem.frame.maxX:self.avatar.frame.maxX)+8, y: StatusBarHeight+10, width: ScreenWidth - CGFloat(self.rightImages.count*36)*2, height: 22)
             if textAlignment == .center {
                 self.titleLabel.center = CGPoint(x: self.center.x, y: self.titleLabel.center.y)
             }
@@ -130,6 +155,8 @@ import UIKit
         } else {
             self.avatar.image = placeHolder == nil ? Appearance.avatarPlaceHolder:placeHolder
         }
+        Theme.registerSwitchThemeViews(view: self)
+        self.switchTheme(style: Theme.style)
     }
     
     required public init?(coder: NSCoder) {
@@ -138,6 +165,17 @@ import UIKit
     
     @objc private func buttonAction() {
         self.leftItemClick?()
+    }
+    
+    @objc public func updateRightItems(images: [UIImage]) {
+        self.rightImages.removeAll()
+        if rightImages.count > 3 {
+            self.rightImages = Array(images.prefix(3))
+        } else {
+            self.rightImages = images
+        }
+        self.rightItems.frame = CGRect(x: ScreenWidth-CGFloat(self.rightImages.count*36)-8, y: StatusBarHeight+8, width: CGFloat(self.rightImages.count*36), height: 36)
+        self.rightItems.reloadData()
     }
 }
 
@@ -149,7 +187,7 @@ extension EaseChatNavigationBar: UICollectionViewDataSource,UICollectionViewDele
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EaseChatNavigationBarRightCell", for: indexPath) as? EaseChatNavigationBarRightCell
-        cell?.imageView.image = self.rightImages[safe: indexPath.row]
+        cell?.imageView.image = self.rightImages[safe: indexPath.row]?.withTintColor(Theme.style == .light ? UIColor.theme.neutralColor3:UIColor.theme.neutralColor98)
         return cell ?? UICollectionViewCell()
     }
     
@@ -157,6 +195,21 @@ extension EaseChatNavigationBar: UICollectionViewDataSource,UICollectionViewDele
         collectionView.deselectItem(at: indexPath, animated: true)
         self.rightItemsClick?(indexPath)
     }
+}
+
+extension EaseChatNavigationBar: ThemeSwitchProtocol {
+    public func switchTheme(style: ThemeStyle) {
+        switch self.userState {
+        case .online:
+            self.status.backgroundColor = style == .dark ? UIColor.theme.secondaryColor6:UIColor.theme.secondaryColor5
+        case .offline:
+            self.status.backgroundColor = style == .dark ? UIColor.theme.neutralColor6:UIColor.theme.neutralColor5
+        }
+        self.leftItem.setImage(self.backImage?.withTintColor(Theme.style == .light ? UIColor.theme.neutralColor3:UIColor.theme.neutralColor98), for: .normal)
+        self.rightItems.reloadData()
+    }
+    
+    
 }
 
 @objc open class EaseChatNavigationBarRightCell: UICollectionViewCell {

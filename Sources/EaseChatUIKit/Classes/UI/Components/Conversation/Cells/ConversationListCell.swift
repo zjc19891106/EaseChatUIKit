@@ -20,7 +20,7 @@ import UIKit
     }()
     
     lazy var badge: UILabel = {
-        UILabel(frame: CGRect(x: self.contentView.frame.width-48, y: self.nickName.frame.maxY+5, width: 32, height: 18)).cornerRadius(.large).backgroundColor(UIColor.theme.primaryColor5).textColor(UIColor.theme.neutralColor98).font(UIFont.theme.bodySmall)
+        UILabel(frame: CGRect(x: self.contentView.frame.width-48, y: self.nickName.frame.maxY+5, width: 32, height: 18)).cornerRadius(.large).backgroundColor(UIColor.theme.primaryColor5).textColor(UIColor.theme.neutralColor98).font(UIFont.theme.bodySmall).textAlignment(.center)
     }()
     
     lazy var dot: UIView = {
@@ -29,6 +29,8 @@ import UIKit
     
     @objc required public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.contentView.backgroundColor = .clear
+        self.backgroundColor = .clear
         self.contentView.addSubViews([self.avatar,self.nickName,self.date,self.content,self.badge,self.dot])
         self.nickName.contentHorizontalAlignment = .left
         self.nickName.semanticContentAttribute = .forceLeftToRight
@@ -52,11 +54,12 @@ import UIKit
     func refresh(info: ConversationInfo) {
         self.avatar.image(with: info.avatarURL, placeHolder: info.type == .chat ? Appearance.Conversation.singlePlaceHolder:Appearance.Conversation.groupPlaceHolder)
         self.nickName.setTitle(info.nickName.isEmpty ? info.id:info.nickName, for: .normal)
-        self.date.text = info.lastMessage?.showDate ?? Date().chat.dateString(Appearance.Conversation.dateFormat)
-        self.badge.isHidden = info.noDisturb
+        self.content.text = info.lastMessage?.showContent ?? ""
+        self.date.text = info.lastMessage?.showDate ?? Date().chat.dateString(Appearance.Conversation.dateFormatToday)
+        self.badge.isHidden = info.doNotDisturb
         self.badge.text = info.unreadCount > 99 ? "99+":"\(info.unreadCount)"
         self.badge.isHidden = info.unreadCount <= 0
-        if info.noDisturb {
+        if info.doNotDisturb {
             self.dot.isHidden = info.unreadCount <= 0
         } else {
             self.dot.isHidden = true
@@ -78,6 +81,10 @@ extension ConversationListCell: ThemeSwitchProtocol {
 
 @objcMembers open class ConversationInfo:NSObject, EaseProfileProtocol {
     
+    public var selected: Bool = false
+    
+    public var type: EaseProfileProviderType = .chat
+    
     public var id: String = ""
     
     public var avatarURL: String = ""
@@ -88,9 +95,7 @@ extension ConversationListCell: ThemeSwitchProtocol {
     
     public var unreadCount: Int = 0
     
-    public var noDisturb = false
-    
-    public var type = ChatConversationType.chat
+    public var doNotDisturb = false
     
     public var pinned = false
     
@@ -105,14 +110,24 @@ extension ChatMessage {
     
     var showDate: String {
         let messageDate = Date(timeIntervalSince1970: TimeInterval(self.timestamp/1000))
-        if Appearance.Conversation.dateFormat.isEmpty {
-            if messageDate.chat.compareDays() < 0 {
-                return messageDate.chat.dateString("MM dd")
-            } else {
-                return messageDate.chat.dateString("HH:mm")
-            }
+        if messageDate.chat.compareDays() < 0 {
+            return messageDate.chat.dateString(Appearance.Conversation.dateFormatOtherDay)
         } else {
-            return messageDate.chat.dateString(Appearance.Conversation.dateFormat)
+            return messageDate.chat.dateString(Appearance.Conversation.dateFormatToday)
         }
+    }
+    
+    var showContent: String {
+        var text = "[未知类型]"
+        switch self.body.type {
+        case .text: text = (self.body as? ChatTextMessageBody)?.text ?? ""
+        case .image: text = "[image]"
+        case .voice: text = "[voice]"
+        case .video: text = "[video]"
+        case .custom:
+            consoleLogInfo("", type: .debug)
+        default: break
+        }
+        return text
     }
 }

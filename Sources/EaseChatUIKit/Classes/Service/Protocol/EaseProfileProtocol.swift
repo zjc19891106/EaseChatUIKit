@@ -7,12 +7,19 @@
 
 import Foundation
 
+@objc public enum EaseProfileProviderType: UInt {
+    case chat
+    case group
+    case contact
+}
 
 /// Profile of the EaseChatUIKit display needed.
 @objc public protocol EaseProfileProtocol: NSObjectProtocol {
     var id: String {set get}
-    var avatarURL: String {set get}
+    var selected: Bool {set get}
     var nickName: String {set get}
+    var avatarURL: String {set get}
+    var type: EaseProfileProviderType {set get}
 }
 
 @objcMembers open class EaseProfile:NSObject, EaseProfileProtocol {
@@ -23,6 +30,10 @@ import Foundation
     
     public var nickName: String = ""
     
+    public var type: EaseProfileProviderType = .chat
+    
+    public var selected: Bool = false
+    
 }
 
 /// Profile provider of the EaseChatUIKit.Only available in Swift language.
@@ -31,14 +42,14 @@ public protocol EaseProfileProvider {
     /// Synchronously obtain user information.
     /// - Parameters:
     ///   - id: Conversation's id.
-    ///   - type: ``ChatConversationType``
+    ///   - type: ``EaseProfileProviderType``
     /// - Returns: ``EaseProfileProtocol``
-    func getProfile(id: String, type: ChatConversationType) -> EaseProfileProtocol
+    func getProfile(id: String, type: EaseProfileProviderType) -> EaseProfileProtocol
     
     /// Coroutine obtains user information asynchronously.
     /// - Parameter profilesMap: The map parameter key is the conversation type value is the corresponding conversation id string array.
     /// - Returns: Array of the conform``EaseProfileProtocol`` object.
-    func fetchProfiles(profilesMap: [ChatConversationType:[String]]) async -> [EaseProfileProtocol]
+    func fetchProfiles(profilesMap: [EaseProfileProviderType:[String]]) async -> [EaseProfileProtocol]
 }
 
 public extension EaseProfileProvider {
@@ -55,7 +66,7 @@ public extension EaseProfileProvider {
     ///   - id: Conversation's id.
     ///   - type: ``ChatConversationType``
     /// - Returns: ``EaseProfileProtocol``
-    @objc optional func getProfile(id: String, type: ChatConversationType) -> EaseProfileProtocol
+    @objc optional func getProfile(id: String, type: EaseProfileProviderType) -> EaseProfileProtocol
     
     /// Need to obtain the list display information on the current screen.
     /// - Parameters:

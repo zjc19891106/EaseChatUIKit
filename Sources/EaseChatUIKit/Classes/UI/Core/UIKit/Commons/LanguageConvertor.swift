@@ -45,7 +45,8 @@ public enum LanguageType: String {
         }
         let path = Bundle.chatBundle.path(forResource: lang, ofType: "lproj") ?? ""
         let pathBundle = Bundle(path: path) ?? .main
-        return pathBundle.localizedString(forKey: key, value: nil, table: nil)
+        let value = pathBundle.localizedString(forKey: key, value: nil, table: nil)
+        return value
     }
 
 }

@@ -10,15 +10,9 @@ import UIKit
 @objc public class GroupServiceImplement: NSObject {
     private var responseDelegates: NSHashTable<GroupServiceListener> = NSHashTable<GroupServiceListener>.weakObjects()
     
-    private var groupId = ""
     
-    public var chatGroup: ChatGroup? {
-        ChatGroup(id: self.groupId)
-    }
-    
-    @objc public required init(groupId: String) {
+    public override init() {
         super.init()
-        self.groupId = groupId
         ChatClient.shared().groupManager?.add(self, delegateQueue: .main)
     }
     
@@ -155,7 +149,7 @@ extension GroupServiceImplement: GroupService {
 extension GroupServiceImplement: GroupEventsListener {
     public func groupInvitationDidReceive(_ aGroupId: String, groupName aGroupName: String, inviter aInviter: String, message aMessage: String?) {
         for listener in self.responseDelegates.allObjects {
-            listener.onReceivedNewGroupInvitation(groupId: groupId, groupName: aGroupName, userId: aInviter, invitation: aMessage ?? "")
+            listener.onReceivedNewGroupInvitation(groupId: aGroupId, groupName: aGroupName, userId: aInviter, invitation: aMessage ?? "")
         }
     }
     

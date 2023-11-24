@@ -51,4 +51,48 @@
 "Your were muted!" = "您已被禁言";
 "new messages" = "条新消息";
 
+"Contact" = "联系人";
+"Add" = "添加";
+"NewRequestDetail" = "请求添加您为好友";
+"Groups" = "群聊";
+"NewRequest" = "新请求";
 
+"contactID" = "联系人ID";
+
+"new_chat_button_click_menu_addcontacts" = "添加联系人";
+"new_chat_button_click_menu_creategroup" = "创建群组";
+"new_chat_button_click_menu_selectcontacts" = "选择联系人";
+
+"group_details_button_members" = "群成员";
+"group_details_button_alias" = "我在本群的昵称";
+"group_details_switch_donotdisturb" = "消息免打扰";
+"group_details_button_clearchathistory" = "清空聊天记录";
+"group_details_button_name" = "群名称";
+"group_details_button_description" = "群描述";
+"group_details_extend_button_transfer" = "转移群主";
+"group_details_extend_button_disband" = "解散群组";
+"group_details_extend_button_disband_alert_title" = "解散群组";
+"group_details_extend_button_disband_alert_subtitle" = "解散群会删除所有成员";
+"group_details_extend_button_leave" = "退出群聊";
+"group_details_extend_button_leave_alert_title" = "退出群聊";
+"group_details_extend_button_leave_alert_subtilte" = "退出群聊将清空消息记录以及会话";
+
+
+"add_contacts_subtitle" = "通过用户ID添加联系人";
+
+"conversation_left_slide_menu_delete" = "删除";
+"conversation_left_slide_menu_pin" = "置顶";
+"conversation_left_slide_menu_unpin" = "取消置顶";
+"conversation_left_slide_menu_mute" = "接受通知";
+"conversation_left_slide_menu_unmute" = "关闭通知";
+"conversation_right_slide_menu_read" = "标记已读";
+"conversation_right_slide_menu_more" = "更多";
+
+"contact_details_switch_donotdisturb" = "消息免打扰";
+"contact_details_button_clearchathistory" = "清空聊天记录";
+
+"contact_details_extend_button_delete" = "删除联系人";
+"contact_details_extend_button_delete_alert_subtitle" = "删除联系人同时删除历史消息";
+"contact_details_extend_button_delete_alert_button_confirm" = "确定";
+"contact_details_extend_button_delete_alert_button_cancel" = "取消";
+"contact_details_extend_button_cancel" = "取消";

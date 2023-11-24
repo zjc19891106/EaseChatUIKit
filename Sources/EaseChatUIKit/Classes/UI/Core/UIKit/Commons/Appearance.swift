@@ -9,7 +9,7 @@ import UIKit
 
 /// An object containing visual configurations for the whole application.
 @objcMembers final public class Appearance: NSObject {
-        
+            
     /// You can change the width of a single option with ``PageContainerTitleBar`` in the popup container by setting the current property.
     public static var pageContainerTitleBarItemWidth: CGFloat = (ScreenWidth-32)/2.0
     
@@ -74,7 +74,10 @@ import UIKit
         public static var groupPlaceHolder = UIImage(named: "group", in: .chatBundle, with: nil)
         
         /// Setting this property changes the date format displayed within a single session.
-        public static var dateFormat = ""
+        public static var dateFormatToday = "HH:mm"
+        
+        /// Setting this property changes the date format displayed within a single session.
+        public static var dateFormatOtherDay = "MMM dd"
         
         /// Prompt message when the session list is refreshed
         public static var refreshAlert = "Refreshing..."
@@ -85,6 +88,8 @@ import UIKit
         /// `translate.action = { }`
         /// `Appearance.Conversation.moreActions.append(translate)`
         public static var moreActions: [ActionSheetItemProtocol] = []
+        
+        public static var addActions: [ActionSheetItemProtocol] = [ActionSheetItem(title: "new_chat_button_click_menu_selectcontacts".chat.localize, type: .normal, tag: "SelectContacts", image: UIImage(named: "chatWith", in: .chatBundle, with: nil)),ActionSheetItem(title: "new_chat_button_click_menu_addcontacts".chat.localize, type: .normal, tag: "AddContact", image: UIImage(named: "person_add", in: .chatBundle, with: nil)?.withTintColor(UIColor.theme.primaryColor5)),ActionSheetItem(title: "new_chat_button_click_menu_creategroup".chat.localize, type: .normal, tag: "CreateGroup", image: UIImage(named: "create_group", in: .chatBundle, with: nil)?.withTintColor(UIColor.theme.primaryColor5))]
     }
     
     @objcMembers final public class Chat: NSObject {
@@ -121,12 +126,24 @@ import UIKit
         
     }
     
+    /// Contact Module
     @objcMembers final public class Contact: NSObject {
         
-        /// ActionSheet data source of the member list cell on click ``...``.
-        public static var defaultOperationUserActions: [ActionSheetItemProtocol] = [ActionSheetItem(title: "barrage_long_press_menu_mute".chat.localize, type: .normal,tag: "Mute"),ActionSheetItem(title: "participant_list_button_click_menu_remove".chat.localize, type: .destructive,tag: "Remove")]
+        public static var rowHeight = CGFloat(54)
         
-        /// ActionSheet data source of the mute member list cell on click ``...``.
-        public static var defaultOperationMuteUserActions: [ActionSheetItemProtocol] = [ActionSheetItem(title: "barrage_long_press_menu_unmute".chat.localize, type: .normal,tag: "unMute"),ActionSheetItem(title: "participant_list_button_click_menu_remove".chat.localize, type: .destructive,tag: "Remove")]
+        public static var headerRowHeight = CGFloat(54)
+        
+        /// The header items of the contact list.
+        public static var headerExtensionActions: [ContactListHeaderItemProtocol] = [ContactListHeaderItem(featureIdentify: "NewFriendRequest", featureName: "New Request", featureIcon: nil),ContactListHeaderItem(featureIdentify: "GroupChats", featureName: "Joined Groups", featureIcon: nil)]
+        
+        /// The contact info header extension items.
+        public static var detailInfoActionItems: [ContactListHeaderItemProtocol] = [ContactListHeaderItem(featureIdentify: "Chat", featureName: "New Request", featureIcon: UIImage(named: "chatTo", in: .chatBundle, with: nil))]
+        
+        /// ActionSheet menu configuration items after clicking more buttons in a single session side sliding menu.
+        /// How to use?
+        /// `let translate = ActionSheetItem(title: "translate", type: .normal,tag: "Translate")`
+        /// `translate.action = { }`
+        /// `Appearance.Conversation.moreActions.append(translate)`
+        public static var moreActions: [ActionSheetItemProtocol] = [ActionSheetItem(title: "contact_details_extend_button_delete".chat.localize, type: .destructive, tag: "contact_delete")]
     }
 }

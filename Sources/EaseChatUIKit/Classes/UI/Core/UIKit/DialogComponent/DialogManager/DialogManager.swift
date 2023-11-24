@@ -33,45 +33,52 @@ import UIKit
     ///   - action: Callback upon a click of a message operation.
     @objc public func showMessageActions(actions: [ActionSheetItemProtocol],action: @escaping ActionClosure) {
         let actionSheet = ActionSheet(items: actions) { item in
-            action(item)
             UIViewController.currentController?.dismiss(animated: true)
+            action(item)
         }
         actionSheet.frame = CGRect(x: 0, y: 0, width: actionSheet.frame.width, height: actionSheet.frame.height)
         let vc = DialogContainerViewController(custom: actionSheet,constraintsSize: actionSheet.frame.size)
         UIViewController.currentController?.presentViewController(vc)
     }
     
-    /// Shows the member operation list when you click `...`.
+    /// Shows the actions`.
     /// - Parameters:
     ///   - actions: ``ActionSheetItemProtocol`` array.
-    ///   - action: Callback upon a click of a member operation.
-    @objc public func showUserActions(actions: [ActionSheetItemProtocol],action: @escaping ActionClosure) {
+    ///   - action: Callback upon a click .
+    @objc public func showActions(actions: [ActionSheetItemProtocol],action: @escaping ActionClosure) {
         let actionSheet = ActionSheet(items: actions) { item in
-            action(item)
             UIViewController.currentController?.dismiss(animated: true)
+            action(item)
         }
         let vc = DialogContainerViewController(custom: actionSheet,constraintsSize: actionSheet.frame.size)
         actionSheet.frame = CGRect(x: 0, y: 0, width: actionSheet.frame.width, height: actionSheet.frame.height)
-        UIViewController.currentController?.presentingViewController?.presentViewController(vc)
+        UIViewController.currentController?.presentViewController(vc)
     }
     
     // Shows the alert view.
     /// - Parameters:
+    ///   - title: The alert title to display.
     ///   - content: The alert content to display.
     ///   - showCancel: Whether to display the `Cancel` button.
     ///   - showConfirm: Whether to display the `Confirm` button.
-    ///   - confirmClosure: Callback upon a click of the `Confirm` button.
-    @objc public func showAlert(content: String,showCancel: Bool,showConfirm: Bool,confirmClosure: @escaping () -> Void) {
-        let alert = AlertView(frame: CGRect(x: 0, y: 0, width: Appearance.alertContainerConstraintsSize.width, height: Appearance.alertContainerConstraintsSize.height)).background(color: Theme.style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98).content(content: content).title(title: "participant_list_button_click_menu_remove".chat.localize).contentTextAlignment(textAlignment: .center)
+    ///   - showTextField: Whether to display the `TextField` .
+    ///   - placeHolder: `TextField` placeholder.
+    ///   - confirmClosure: Callback upon a click of the `Confirm` button.When text field was shown callback contain input text.
+    @objc public func showAlert(title: String,content: String,showCancel: Bool,showConfirm: Bool,showTextFiled: Bool = false,placeHolder: String = "",confirmClosure: @escaping (String) -> Void) {
+        let size = showTextFiled ? Appearance.alertContainerConstraintsSize:CGSize(width: ScreenWidth, height: 300)
+        let alert = AlertView().background(color: Theme.style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98).title(title: title).content(content: content).contentTextAlignment(textAlignment: .center)
+        if showTextFiled {
+            alert.textField(font: UIFont.theme.bodyLarge).textField(color: Theme.style == .dark ? UIColor.theme.neutralColor98:UIColor.theme.neutralColor1).textFieldPlaceholder(color: Theme.style == .dark ? UIColor.theme.neutralColor5:UIColor.theme.neutralColor6).textFieldPlaceholder(placeholder: placeHolder)
+        }
         if showCancel {
             alert.leftButton(color: Theme.style == .dark ? UIColor.theme.neutralColor95:UIColor.theme.neutralColor3).leftButtonBorder(color: Theme.style == .dark ? UIColor.theme.neutralColor4:UIColor.theme.neutralColor7).leftButton(title: "report_button_click_menu_button_cancel".chat.localize)
         }
         if showConfirm {
-            alert.rightButtonBackground(color: Theme.style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5).rightButton(color: UIColor.theme.neutralColor98).rightButtonTapClosure { _ in
-                confirmClosure()
+            alert.rightButtonBackground(color: Theme.style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5).rightButton(color: UIColor.theme.neutralColor98).rightButtonTapClosure {
+                confirmClosure($0 ?? "")
             }.rightButton(title: "Confirm".chat.localize)
         }
-        let alertVC = AlertViewController(custom: alert)
+        let alertVC = AlertViewController(custom: alert,size: size)
         UIViewController.currentController?.presentingViewController?.presentViewController(alertVC)
     }
 }

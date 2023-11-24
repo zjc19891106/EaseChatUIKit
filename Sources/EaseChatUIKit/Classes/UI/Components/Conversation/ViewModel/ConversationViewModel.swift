@@ -1,5 +1,5 @@
 //
-//  ConversationBinder.swift
+//  ConversationViewModel.swift
 //  EaseChatUIKit
 //
 //  Created by 朱继超 on 2023/11/14.
@@ -10,10 +10,10 @@ import AudioToolbox
 
 
 /// Bind service and driver
-@objc public class ConversationBinder: NSObject {
+@objc open class ConversationViewModel: NSObject {
     
     /// Map to store session settings do not disturb.
-    @UserDefault("EaseChatUIKit_conversation_mute_map", defaultValue: Dictionary<String,Int>()) private var muteMap
+    @UserDefault("EaseChatUIKit_conversation_mute_map", defaultValue: Dictionary<String,Dictionary<String,Int>>()) private var muteMap
     
     /// When conversation clicked.
     public var toChat: ((IndexPath,ConversationInfo) -> Void)?
@@ -22,25 +22,27 @@ import AudioToolbox
     
     private var provider: EaseProfileProvider?
     
-    /// ``ConversationBinder`` init method.
+    /// ``ConversationViewModel`` init method.
     /// - Parameter providerOC: Only available in Objective-C language.
     @objc public required convenience init(providerOC: EaseProfileProviderOC?) {
         self.init()
         self.provider_OC = providerOC
     }
     
-    /// ``ConversationBinder`` init method.
+    /// ``ConversationViewModel`` init method.
     /// - Parameter providerOC: Only available in Swift language.
     public required convenience init(provider: EaseProfileProvider?) {
         self.init()
         self.provider = provider
     }
     
-    private weak var driver: IConversationListDriver?
+    public private(set) weak var driver: IConversationListDriver?
     
-    private var service: ConversationService? = ConversationServiceImplement()
+    public private(set) var service: ConversationServiceImplement? = ConversationServiceImplement()
     
-    private var multiService: MultiDeviceService?  = MultiDeviceServiceImplement()
+    public private(set) var contactService: ContactServiceProtocol? = ContactServiceImplement()
+    
+    public private(set) var multiService: MultiDeviceService?  = MultiDeviceServiceImplement()
     
     /// Bind UI driver and service
     /// - Parameters:
@@ -70,14 +72,16 @@ import AudioToolbox
     @objc public func loadExistLocalDataIfEmptyOtherwiseFetchServer() {
         self.service?.loadExistConversations(completion: { [weak self] result, error in
             if error == nil {
-                self?.driver?.refreshProfiles(infos: result)
+                self?.driver?.refreshList(infos: result)
             } else {
+                self?.driver?.occurError()
                 consoleLogInfo("loadExistOtherwiseFetchServer error:\(error?.errorDescription ?? "")", type: .error)
             }
         })
     }
     
     @objc public func destroyed() {
+        self.driver?.removeActionHandler(actionHandler: self)
         self.service?.unbindConversationEventsListener(listener: self)
         self.multiService?.unbindMultiDeviceListener(listener: self)
         self.driver = nil
@@ -91,10 +95,10 @@ import AudioToolbox
 }
 
 //MARK: - ConversationListActionEventsDelegate
-extension ConversationBinder: ConversationListActionEventsDelegate {
+extension ConversationViewModel: ConversationListActionEventsDelegate {
     
     public func onConversationListOccurErrorWhenFetchServer() {
-        self.service?.fetchAllConversations(completion: nil)
+        self.loadExistLocalDataIfEmptyOtherwiseFetchServer()
     }
     
     public func onConversationListEndScrollNeededDisplayInfos(ids: [String]) {
@@ -116,7 +120,7 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
             })
         }
         if self.provider != nil {
-            let infoMap = [ChatConversationType.chat:privateChats,ChatConversationType.groupChat:groupChats]
+            let infoMap = [EaseProfileProviderType.chat:privateChats,EaseProfileProviderType.group:groupChats]
             Task(priority: .background) {
                 let profiles = await self.provider?.fetchProfiles(profilesMap: infoMap) ?? []
                 DispatchQueue.main.async {
@@ -142,7 +146,7 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
     }
     
     public func onConversationSwipe(type: UIContextualActionType, info: ConversationInfo) {
-        if let hooker = ComponentsActionEventsRegister.Conversation.swipeAction {
+        if let hooker = ComponentViewsActionHooker.Conversation.swipeAction {
             hooker(type, info)
         } else {
             switch type {
@@ -151,6 +155,9 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
                     if error != nil {
                         consoleLogInfo("onConversationSwipe pin:\(error?.errorDescription ?? "")", type: .error)
                     } else {
+                        if var item = Appearance.Conversation.swipeLeftActions.first(where: { $0 == .pin }) {
+                            item = .unpin
+                        }
                         if let infos = ChatClient.shared().chatManager?.getAllConversations(true) {
                             self.driver?.refreshList(infos: self.mapper(objects: infos))
                         }
@@ -161,6 +168,9 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
                     if error != nil {
                         consoleLogInfo("onConversationSwipe unpin:\(error?.errorDescription ?? "")", type: .error)
                     } else {
+                        if var item = Appearance.Conversation.swipeLeftActions.first(where: { $0 == .unpin }) {
+                            item = .pin
+                        }
                         if let infos = ChatClient.shared().chatManager?.getAllConversations(true) {
                             self.driver?.refreshList(infos: self.mapper(objects: infos))
                         }
@@ -170,7 +180,7 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
                     if error != nil {
                         consoleLogInfo("onConversationSwipe mute:\(error?.errorDescription ?? "")", type: .error)
                     } else {
-                        info.noDisturb = true
+                        info.doNotDisturb = true
                         self?.driver?.swipeMenuOperation(info: info, type: .mute)
                     }
                 }
@@ -178,7 +188,7 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
                     if error != nil {
                         consoleLogInfo("onConversationSwipe unmute:\(error?.errorDescription ?? "")", type: .error)
                     } else {
-                        info.noDisturb = false
+                        info.doNotDisturb = false
                         self?.driver?.swipeMenuOperation(info: info, type: .unmute)
                     }
                 }
@@ -202,7 +212,7 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
     }
     
     public func onConversationDidSelected(indexPath: IndexPath, info: ConversationInfo) {
-        if let hooker = ComponentsActionEventsRegister.Conversation.didSelected {
+        if let hooker = ComponentViewsActionHooker.Conversation.didSelected {
             hooker(indexPath,info)
         } else {
             self.toChat?(indexPath,info)
@@ -210,7 +220,7 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
     }
     
     public func onConversationLongPressed(indexPath: IndexPath, info: ConversationInfo) {
-        if let hooker = ComponentsActionEventsRegister.Conversation.longPressed {
+        if let hooker = ComponentViewsActionHooker.Conversation.longPressed {
             hooker(indexPath,info)
         } else {
             consoleLogInfo("onConversationLongPressed", type: .debug)
@@ -226,13 +236,13 @@ extension ConversationBinder: ConversationListActionEventsDelegate {
 
 
 //MARK: - ConversationServiceListener
-extension ConversationBinder: ConversationServiceListener {
+extension ConversationViewModel: ConversationServiceListener {
     public func onConversationLastMessageUpdate(message: ChatMessage, info: ConversationInfo) {
         if let infos = ChatClient.shared().chatManager?.getAllConversations(true) {
             let items = self.mapper(objects: infos)
             self.driver?.refreshList(infos: items)
             for item in items {
-                if !item.noDisturb,EaseChatUIKitClient.shared.option.option_chat.soundOnReceivedNewMessage {
+                if !item.doNotDisturb,EaseChatUIKitClient.shared.option.option_chat.soundOnReceivedNewMessage {
                     self.playNewMessageSound()
                 }
             }
@@ -262,13 +272,22 @@ extension ConversationBinder: ConversationServiceListener {
 }
 
 //MARK: - MultiDeviceListener
-extension ConversationBinder: MultiDeviceListener {
+extension ConversationViewModel: MultiDeviceListener {
     public func onConversationEventDidChanged(event: MultiDeviceEvent, conversationId: String, conversationType: ChatConversationType) {
         switch event {
-        case .conversationPinned,.conversationUnpinned,.conversationDelete:
+        case .conversationPinned,.conversationUnpinned:
             if let infos = ChatClient.shared().chatManager?.getAllConversations(true) {
                 self.driver?.refreshList(infos: self.mapper(objects: infos))
+                self.service?.handleResult(error: nil, type: event == .conversationPinned ? .pin:.unpin)
             }
+        case .conversationDelete:
+            if let infos = ChatClient.shared().chatManager?.getAllConversations(true) {
+                if let info = self.mapper(objects: infos).first(where: { $0.id == conversationId }) {
+                    self.driver?.swipeMenuOperation(info: info, type: .delete)
+                    self.service?.handleResult(error: nil, type: .delete)
+                }
+            }
+            
         default: break
         }
     }
@@ -279,19 +298,19 @@ extension ConversationBinder: MultiDeviceListener {
             conversation.id = $0.conversationId
             conversation.unreadCount = Int($0.unreadMessagesCount)
             conversation.lastMessage = $0.latestMessage
-            conversation.type = $0.type
+            conversation.type = EaseProfileProviderType(rawValue: UInt($0.type.rawValue)) ?? .chat
             conversation.pinned = $0.isPinned
             if EaseChatUIKitClient.shared.option.option_chat.saveConversationInfo {
-                if let nickName = $0.ext["EaseChatUIKit_nickName"] as? String {
+                if let nickName = $0.ext?["EaseChatUIKit_nickName"] as? String {
                     conversation.nickName = nickName
                 }
-                if let avatarURL = $0.ext["EaseChatUIKit_avatarURL"] as? String {
+                if let avatarURL = $0.ext?["EaseChatUIKit_avatarURL"] as? String {
                     conversation.avatarURL = avatarURL
                 }
             }
-            conversation.noDisturb = false
-            if let silentMode = self.muteMap[$0.conversationId] {
-                conversation.noDisturb = silentMode != 0
+            conversation.doNotDisturb = false
+            if let silentMode = self.muteMap[EaseChatUIKitContext.shared?.currentUser?.userId ?? ""]?[$0.conversationId] {
+                conversation.doNotDisturb = silentMode != 0
             }
             return conversation
         }

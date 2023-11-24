@@ -15,21 +15,11 @@ import UIKit
     
     /// Remove UI action handler.
     /// - Parameter actionHandler: ``ConversationListActionEventsDelegate``
-    public func removeEventHandler(actionHandler: ConversationListActionEventsDelegate) {
+    public func removeActionHandler(actionHandler: ConversationListActionEventsDelegate) {
         self.eventHandlers.remove(actionHandler)
     }
     
-    public private(set) var datas: [ConversationInfo] = []  {
-        didSet {
-            DispatchQueue.main.async {
-                if self.datas.count <= 0 {
-                    self.backgroundView = self.empty
-                } else {
-                    self.backgroundView = nil
-                }
-            }
-        }
-    }
+    public private(set) var datas: [ConversationInfo] = []
     
     private var indexMap: [String:Int] = [:]
         
@@ -44,14 +34,26 @@ import UIKit
     
     @objc required public override init(frame: CGRect, style: UITableView.Style) {
         super.init(frame: frame, style: style)
-        self.delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).register(ComponentsRegister.shared.ConversationCell.self, "EaseChatUIKit.ConversationCell").rowHeight(Appearance.Conversation.rowHeight)
-        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressedAction(gesture:)))
-        longPress.minimumPressDuration = 1
-        self.addGestureRecognizer(longPress)
-        let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
-        self.refreshControl = refreshControl
+        self.delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).registerCell(ComponentsRegister.shared.ConversationCell.self , forCellReuseIdentifier: "EaseChatUIKit.ConversationCell").rowHeight(Appearance.Conversation.rowHeight).backgroundColor(.clear)
+//        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressedAction(gesture:)))
+//        longPress.minimumPressDuration = 1
+//        self.addGestureRecognizer(longPress)
+//        let refreshControl = UIRefreshControl()
+//        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+//        self.refreshControl = refreshControl
         Theme.registerSwitchThemeViews(view: self)
+        
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("EaseUIKit_do_not_disturb_changed"), object: nil, queue: .main) { [weak self] notify in
+            if let userInfo = notify.userInfo {
+                if let id = userInfo["id"] as? String {
+                    if let item = self?.datas.first(where: { $0.id == id }) {
+                        if let pin = userInfo["value"] as? Bool {
+                            item.pinned = pin
+                        }
+                    }
+                }
+            }
+        }
     }
     
     @objc private func refreshData() {
@@ -86,7 +88,12 @@ import UIKit
 //MARK: - UITableViewDelegate&UITableViewDataSource about
 extension ConversationList: UITableViewDelegate,UITableViewDataSource {
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        self.datas.count
+        if self.datas.count <= 0 {
+            self.backgroundView = self.empty
+        } else {
+            self.backgroundView = nil
+        }
+        return self.datas.count
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -104,7 +111,7 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         guard let info = self.datas[safe: indexPath.row] else { return }
-        if let hooker = ComponentsActionEventsRegister.Conversation.longPressed {
+        if let hooker = ComponentViewsActionHooker.Conversation.longPressed {
             hooker(indexPath,info)
         } else {
             for listener in self.eventHandlers.allObjects {
@@ -115,7 +122,7 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
     
     public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard let info = self.datas[safe: indexPath.row] else { return nil }
-        if info.noDisturb {
+        if info.doNotDisturb {
             if let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .unmute }) {
                 Appearance.Conversation.swipeLeftActions[index] = .unmute
             }
@@ -134,8 +141,9 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
     
     private func actions(leading: Bool,info: ConversationInfo,indexPath: IndexPath) -> [UIContextualActionChatUIKit] {
         var rightActions = [UIContextualActionType]()
+        var leftActions = [UIContextualActionType]()
         for action in Appearance.Conversation.swipeRightActions {
-            if action != .read {
+            if action == .read {
                 if info.unreadCount > 0 {
                     rightActions.append(action)
                 }
@@ -143,47 +151,59 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
                 rightActions.append(action)
             }
         }
+        if info.pinned,let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .pin }) {
+            Appearance.Conversation.swipeLeftActions[index] = .unpin
+        }
+        if !info.pinned,let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .unpin }) {
+            Appearance.Conversation.swipeLeftActions[index] = .pin
+        }
+        if info.doNotDisturb,let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .mute }) {
+            Appearance.Conversation.swipeLeftActions[index] = .unmute
+        }
+        if !info.doNotDisturb,let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .unmute }) {
+            Appearance.Conversation.swipeLeftActions[index] = .mute
+        }
         return (leading ? rightActions:Appearance.Conversation.swipeLeftActions).map {
             switch $0 {
             case .more:
-                return UIContextualActionChatUIKit(title: "", style: .normal, actionType: $0) { (action, view, completion) in
+                return UIContextualActionChatUIKit(title: "conversation_right_slide_menu_more".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
                     for listener in self.eventHandlers.allObjects {
                         listener.onConversationSwipe(type: .more, info: info)
                     }
                     completion(true)
-                }
+                }.backgroundColor(color: Theme.style == .dark ? UIColor.theme.neutralColor6:UIColor.theme.neutralColor5).icon(image: UIImage(named: "more", in: .chatBundle, with: nil))
             case .read:
-                return UIContextualActionChatUIKit(title: "", style: .normal, actionType: $0) { (action, view, completion) in
+                return UIContextualActionChatUIKit(title: "conversation_right_slide_menu_read".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
                     for listener in self.eventHandlers.allObjects {
                         listener.onConversationSwipe(type: .read, info: info)
                     }
                     completion(true)
-                }
+                }.backgroundColor(color: Theme.style == .dark ? UIColor.theme.neutralSpecialColor6:UIColor.theme.neutralSpecialColor5).icon(image: UIImage(named: "read", in: .chatBundle, with: nil))
             case .delete:
-                return UIContextualActionChatUIKit(title: "", style: .normal, actionType: $0) { (action, view, completion) in
+                return UIContextualActionChatUIKit(title: "conversation_right_slide_menu_delete".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
                     self.deleteRows(at: [indexPath], with: .fade)
                     for listener in self.eventHandlers.allObjects {
                         listener.onConversationSwipe(type: .delete, info: info)
                     }
                     completion(true)
-                }
+                }.backgroundColor(color: Theme.style == .dark ? UIColor.theme.errorColor6:UIColor.theme.errorColor5).icon(image: UIImage(named: "trash", in: .chatBundle, with: nil))
             case .mute:
-                return UIContextualActionChatUIKit(title: "", style: .normal, actionType: $0) { (action, view, completion) in
+                return UIContextualActionChatUIKit(title: "conversation_right_slide_menu_mute".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
                     for listener in self.eventHandlers.allObjects {
                         listener.onConversationSwipe(type: .mute, info: info)
                     }
                     completion(true)
-                }
+                }.backgroundColor(color: Theme.style == .dark ? UIColor.theme.neutralSpecialColor6:UIColor.theme.neutralSpecialColor5).icon(image: UIImage(named: "mute", in: .chatBundle, with: nil))
             case .pin:
-                return UIContextualActionChatUIKit(title: "", style: .normal, actionType: $0) { (action, view, completion) in
+                return UIContextualActionChatUIKit(title: "conversation_left_slide_menu_pin".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
                     for listener in self.eventHandlers.allObjects {
                         listener.onConversationSwipe(type: .pin, info: info)
                     }
                     completion(true)
-                }
+                }.backgroundColor(color: Theme.style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5).icon(image: UIImage(named: "pin", in: .chatBundle, with: nil))
             case .unpin:
-                return UIContextualActionChatUIKit(title: "", style: .normal, actionType: $0) { (action, view, completion) in
-                    if let hooker = ComponentsActionEventsRegister.Conversation.swipeAction {
+                return UIContextualActionChatUIKit(title: "conversation_left_slide_menu_unpin".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
+                    if let hooker = ComponentViewsActionHooker.Conversation.swipeAction {
                         hooker(.unpin, info)
                     } else {
                         for listener in self.eventHandlers.allObjects {
@@ -191,14 +211,14 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
                         }
                     }
                     completion(true)
-                }
+                }.backgroundColor(color: Theme.style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5).icon(image: UIImage(named: "unpin", in: .chatBundle, with: nil))
             case .unmute:
-                return UIContextualActionChatUIKit(title: "", style: .normal, actionType: $0) { (action, view, completion) in
+                return UIContextualActionChatUIKit(title: "conversation_left_slide_menu_unmute".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
                     for listener in self.eventHandlers.allObjects {
                         listener.onConversationSwipe(type: .unmute, info: info)
                     }
                     completion(true)
-                }
+                }.backgroundColor(color: Theme.style == .dark ? UIColor.theme.neutralSpecialColor6:UIColor.theme.neutralSpecialColor5).icon(image: UIImage(named: "unmute", in: .chatBundle, with: nil))
             }
         }
     }
@@ -224,8 +244,14 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
 
 //MARK: - IConversationListDriver Implement
 extension ConversationList: IConversationListDriver {
+    public func occurError() {
+        self.empty.state = .error
+        self.reloadData()
+    }
+    
     public func refreshList(infos: [ConversationInfo]) {
-        self.refreshControl?.endRefreshing()
+//        self.refreshControl?.endRefreshing()
+        self.empty.state = .empty
         self.datas.removeAll()
         self.datas.append(contentsOf: infos)
         self.updateIndexMap()
@@ -324,7 +350,7 @@ extension ConversationList: IConversationListDriver {
 extension ConversationList: ThemeSwitchProtocol {
     public func switchTheme(style: ThemeStyle) {
         self.backgroundColor = style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98
-        self.refreshData()
+        self.reloadData()
     }
     
 }
@@ -333,6 +359,7 @@ extension ConversationList: ThemeSwitchProtocol {
 /// Session list touch event callback proxy
 @objc public protocol ConversationListActionEventsDelegate: NSObjectProtocol {
     
+    /// When fetch conversations list occur error.Empty view retry button on clicked.The method will call.
     func onConversationListOccurErrorWhenFetchServer()
     
     /// The method will called on conversation list end scroll,then it will ask you for the session nickname and avatar data and then refresh it.
@@ -371,7 +398,10 @@ extension ConversationList: ThemeSwitchProtocol {
     
     /// Remove UI action handler.
     /// - Parameter actionHandler: ``ConversationListActionEventsDelegate``
-    func removeEventHandler(actionHandler: ConversationListActionEventsDelegate)
+    func removeActionHandler(actionHandler: ConversationListActionEventsDelegate)
+    
+    /// When fetch list occur error.
+    func occurError()
     
     /// Conversation Operation event after clicking the button in the side-sliding menu.
     /// - Parameters:

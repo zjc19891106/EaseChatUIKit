@@ -44,11 +44,13 @@ import UIKit
         let attributedString = NSMutableAttributedString {
             AttributedText(string).foregroundColor(Theme.style == .dark ? UIColor.theme.neutralColor98:UIColor.theme.neutralColor1)
         }
-        var range = (string as NSString).range(of: keyword, options: .caseInsensitive)
-        while range.location != NSNotFound {
-            attributedString.addAttribute(.foregroundColor, value: Theme.style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5, range: range)
-            let remainingRange = NSRange(location: range.location + range.length, length: string.count - (range.location + range.length))
-            range = (string as NSString).range(of: keyword, options: .caseInsensitive, range: remainingRange)
+        if !keyword.isEmpty {
+            var range = (string as NSString).range(of: keyword, options: .caseInsensitive)
+            while range.location != NSNotFound {
+                attributedString.addAttribute(.foregroundColor, value: Theme.style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5, range: range)
+                let remainingRange = NSRange(location: range.location + range.length, length: string.count - (range.location + range.length))
+                range = (string as NSString).range(of: keyword, options: .caseInsensitive, range: remainingRange)
+            }
         }
         return attributedString
     }

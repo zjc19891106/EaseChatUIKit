@@ -41,7 +41,7 @@ extension MultiDeviceServiceImplement: MultiDeviceService {
 extension MultiDeviceServiceImplement: MultiDeviceEventsListener {
     public func multiDevicesContactEventDidReceive(_ aEvent: MultiDeviceEvent, username aUsername: String, ext aExt: String?) {
         for listener in self.responseDelegates.allObjects {
-            listener.onContactsEventDidChanged?(event: aEvent, userId: aUsername, extension: aExt?.chat.jsonToDictionary() ?? [:])
+            listener.onContactsEventDidChanged?(event: aEvent, userId: aUsername, extension: aExt ?? "")
         }
     }
     

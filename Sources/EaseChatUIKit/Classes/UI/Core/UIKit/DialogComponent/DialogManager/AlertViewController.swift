@@ -28,8 +28,9 @@ import UIKit
         - custom: The custom view to be displayed in the dialog container.
      - Returns: A new `AlertViewController` instance.
      */
-    @objc public required convenience init(custom: UIView) {
+    @objc public required convenience init(custom: UIView,size: CGSize) {
         self.init()
+        self.presentedViewComponent = PresentedViewComponent(contentSize: size,destination: .custom(center: CGPoint(x: ScreenWidth/2.0-custom.frame.width/2.0, y: ScreenHeight/2.0-custom.frame.height/2.0)))
         self.customView = custom
     }
 

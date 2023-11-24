@@ -25,7 +25,7 @@ import Foundation
     ///   - event: ``MultiDeviceEvent``
     ///   - userId: The id of the user.
     ///   - info: Extension info.
-    @objc optional func onContactsEventDidChanged(event: MultiDeviceEvent,userId: String,extension info: Dictionary<String,Any>)
+    @objc optional func onContactsEventDidChanged(event: MultiDeviceEvent,userId: String,extension info: String)
     
     /// When a event of group changes on other devices
     /// - Parameters:

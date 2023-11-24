@@ -7,6 +7,11 @@
 
 import Foundation
 
+@objc public enum UserState: UInt {
+    case online
+    case offline
+}
+
 
 @objc public protocol UserInfoProtocol: NSObjectProtocol {
     

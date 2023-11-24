@@ -17,11 +17,18 @@ import Foundation
     /// - Parameter listener: ``ContactEventsResponse``
     func unbindContactEventListener(listener: ContactEventsResponse)
     
+    /// Register emergency listener
+    /// - Parameter listener: ``ContactEmergencyListener``
+    func registerEmergencyListener(listener: ContactEmergencyListener)
+    
+    /// Unregister emergency listener
+    /// - Parameter listener: ``ContactEmergencyListener``
+    func unregisterEmergencyListener(listener: ContactEmergencyListener)
+    
     /// Fetch contacts form server.
     /// - Parameters:
-    ///   - userIds: You want to get the string array of user ids.
     ///   - completion: Callback, if successful it will return a string array of user id, if it fails it will return an error.
-    func contacts(userIds: [String],completion: @escaping (ChatError?,[String]) -> Void)
+    func contacts(completion: @escaping (ChatError?,[Contact]) -> Void)
     
     /// Add contact.
     /// - Parameters:
@@ -68,6 +75,13 @@ import Foundation
     /// Get the device ID array of all current user logins except the current device.
     /// - Parameter completion: Callback, if successful it will return a string array of user id, if it fails it will return an error.
     func deviceIdsOnOtherPlatformOfCurrentUser(completion: @escaping (ChatError?,[String]) -> Void)
+    
+    /// Set remark to the friend.
+    /// - Parameters:
+    ///   - userId: Friend user id.
+    ///   - remark: Friend remark
+    ///   - completion: Callback, if successful it will return a ``Contact`` object, if it fails it will return an error.
+    func setRemark(userId: String, remark: String,completion: @escaping (ChatError?,Contact?) -> Void)
 }
 
 @objc public protocol ContactEventsResponse: NSObjectProtocol {
@@ -91,4 +105,26 @@ import Foundation
     /// Received friend request
     /// - Parameter userId: Friend user id
     func friendRequestDidReceive(by userId:String)
+}
+
+
+@objc public enum ContactEmergencyType: UInt8 {
+    case add
+    case addFriend
+    case remove
+    case setRemark
+    case agree
+    case decline
+    case fetchContacts
+}
+
+@objc public protocol ContactEmergencyListener: NSObjectProtocol {
+    
+    /// You'll receive the result on conversation service request successful or failure.
+    /// - Parameters:
+    ///   - error: .Success ``ChatError`` is nil.
+    ///   - type: ``ContactEmergencyType``
+    ///   - operatorId: The id of operator.
+    func onResult(error: ChatError?,type: ContactEmergencyType,operatorId: String)
+    
 }
