@@ -72,13 +72,13 @@ import UIKit
             self.menuList.reloadData()
         }
         let userId = EaseChatUIKitContext.shared?.currentUserId ?? ""
-        self.service.fetchMembersAttribute(groupId: groupId, userIds: [userId], keys: ["nickname"]) { [weak self] error, attributes in
-            if error == nil,let nickname = attributes?[userId]?["nickname"] as? String {
+        EaseChatUIKitContext.shared?.groupMemberAttributeCache?.fetchCacheValue(groupId: groupId, userIds: [userId], key: "nickname", completion: { [weak self] error, attributes in
+            if error == nil,let nickname = attributes?.first {
                 self?.fillAlias(nickname: nickname)
             } else {
                 consoleLogInfo("fetchMembersAttribute  nickname error:\(error?.errorDescription ?? "")", type: .error)
             }
-        }
+        })
     }
     
     private func fillAlias(nickname: String) {
