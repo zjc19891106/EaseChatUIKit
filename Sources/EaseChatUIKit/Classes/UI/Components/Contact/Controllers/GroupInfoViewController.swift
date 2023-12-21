@@ -134,20 +134,31 @@ import UIKit
     }
     
     private func alreadyChat() {
-        if let count = self.navigationController?.viewControllers.count,count > 2 {
-            let previousViewController = self.navigationController?.viewControllers[count - 2] as? MessageListController
-            if previousViewController != nil {
-                self.pop()
-            } else {
-                if let presentingVC = self.presentingViewController {
-                    if presentingVC is MessageListController {
-                        self.pop()
-                    }
+        if let count = self.navigationController?.viewControllers.count {
+            if let previousViewController = self.navigationController?.viewControllers[safe: count - 2] as? MessageListController {
+                if let root = self.navigationController?.viewControllers[safe: count - 3] {
+                    self.navigationController?.popToViewController(root, animated: true)
+                    ControllerStack.toDestination(vc: MessageListController(conversationId: self.chatGroup.groupId))
                 }
+            } else {
+                ControllerStack.toDestination(vc: MessageListController(conversationId: self.chatGroup.groupId))
             }
         } else {
-            let desiredViewController = MessageListController(conversationId: self.chatGroup.groupId, parent: "")
-            ControllerStack.toDestination(vc: desiredViewController)
+            if let presentingVC = self.presentingViewController {
+                if presentingVC is MessageListController {
+                    presentingVC.dismiss(animated: false) {
+                        UIViewController.currentController?.present(MessageListController(conversationId: self.chatGroup.groupId), animated: true)
+                    }
+                } else {
+                    let vc = MessageListController(conversationId: self.chatGroup.groupId)
+                    vc.modalPresentationStyle = .fullScreen
+                    self.present(vc, animated: true)
+                }
+            } else {
+                let desiredViewController = MessageListController(conversationId: self.chatGroup.groupId)
+                ControllerStack.toDestination(vc: desiredViewController)
+            }
+            
         }
     }
     
@@ -286,6 +297,7 @@ extension GroupInfoViewController: UITableViewDelegate,UITableViewDataSource {
     
     private func cleanHistoryMessages() {
         ChatClient.shared().chatManager?.getConversationWithConvId(self.chatGroup.groupId)?.deleteAllMessages(nil)
+        NotificationCenter.default.post(name: Notification.Name("EaseChatUIKit_clean_history_messages"), object: self.chatGroup.groupId)
     }
     
     private func edit(type: GroupInfoEditType,detail: String) {

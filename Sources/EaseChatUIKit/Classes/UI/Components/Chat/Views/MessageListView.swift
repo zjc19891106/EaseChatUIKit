@@ -156,6 +156,17 @@ import UIKit
                 }
             }
         }
+        
+        NotificationCenter.default.addObserver(forName: Notification.Name("EaseChatUIKit_clean_history_messages"), object: nil, queue: .main) { [weak self] notification in
+            if let conversationId = notification.object as? String {
+                if self?.messages.first?.message.conversationId ?? "" == conversationId {
+                    self?.replyId = ""
+                    self?.replyBar.isHidden = true
+                    self?.messages.removeAll()
+                    self?.messageList.reloadData()
+                }
+            }
+        }
     }
     
     required public init?(coder: NSCoder) {

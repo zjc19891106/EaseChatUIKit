@@ -44,6 +44,7 @@ import UIKit
         self.switchMenu.addTarget(self, action: #selector(valueSwitch), for: .valueChanged)
         self.switchMenu.isHidden = true
         Theme.registerSwitchThemeViews(view: self)
+        self.switchTheme(style: Theme.style)
     }
     
     required public init?(coder: NSCoder) {
@@ -66,7 +67,6 @@ import UIKit
     }
     
     @objc private func valueSwitch() {
-        self.switchMenu.isOn = !self.switchMenu.isOn
         if let index = self.indexPath {
             self.valueChanged?(self.switchMenu.isOn,index)
         }
