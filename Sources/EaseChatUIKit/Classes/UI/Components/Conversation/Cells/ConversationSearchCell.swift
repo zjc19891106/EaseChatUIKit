@@ -37,7 +37,7 @@ import UIKit
     func refresh(info: ConversationInfo,keyword: String) {
         let nickName = info.nickName.isEmpty ? info.id:info.nickName
         self.nickName.attributedText = self.highlightKeywords(keyword: keyword, in: nickName)
-        self.avatar.image(with: info.avatarURL, placeHolder: info.type == .chat ? Appearance.Conversation.singlePlaceHolder:Appearance.Conversation.groupPlaceHolder)
+        self.avatar.image(with: info.avatarURL, placeHolder: info.type == .chat ? Appearance.conversation.singlePlaceHolder:Appearance.conversation.groupPlaceHolder)
     }
     
     func highlightKeywords(keyword: String, in string: String) -> NSAttributedString {

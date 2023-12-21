@@ -10,42 +10,45 @@ import UIKit
 /// Bind service and driver
 @objc open class ContactViewModel: NSObject {
     
+    public private(set) var ignoreContacts: [String] = []
+    
     @objc public var viewContact: ((EaseProfileProtocol) -> Void)?
     
     @UserDefault("EaseChatUIKit_contact_new_request", defaultValue: Dictionary<String,Double>()) private var newFriends
     
-    private var provider_OC: EaseProfileProviderOC?
+    private weak var provider_OC: EaseProfileProviderOC?
     
     private var provider: EaseProfileProvider?
     
     /// ``ContactViewModel`` init method.
     /// - Parameter providerOC: Only available in Objective-C language.
-    @objc public required convenience init(providerOC: EaseProfileProviderOC?) {
+    ///   -  ignoreIds: Array of contact ids that already exist in the group.
+    @objc public required convenience init(providerOC: EaseProfileProviderOC?,ignoreIds: [String] = []) {
         self.init()
         self.provider_OC = providerOC
+        self.ignoreContacts = ignoreIds
     }
     
     /// ``ContactViewModel`` init method.
     /// - Parameter providerOC: Only available in Swift language.
-    public required convenience init(provider: EaseProfileProvider?) {
+    ///   - ignoreIds: Array of contact ids that already exist in the group.
+    public required convenience init(provider: EaseProfileProvider?,ignoreIds: [String] = []) {
         self.init()
         self.provider = provider
+        self.ignoreContacts = ignoreIds
     }
     
     public private(set) weak var driver: IContactListDriver?
-    
-    public private(set) weak var indicatorDriver: ISectionIndexListDriver?
-    
+        
     public private(set) var service: ContactServiceProtocol? = ContactServiceImplement()
     
     public private(set) var multiService: MultiDeviceService?  = MultiDeviceServiceImplement()
-    
+        
     /// Bind UI driver and service
     /// - Parameters:
     ///   - driver: The object of conform``IContactListDriver``.
-    @objc public func bind(driver: IContactListDriver, indexDriver: ISectionIndexListDriver) {
+    @objc public func bind(driver: IContactListDriver) {
         self.driver = driver
-        self.indicatorDriver = indexDriver
         self.service?.unbindContactEventListener(listener: self)
         self.service?.bindContactEventListener(listener: self)
         self.multiService?.unbindMultiDeviceListener(listener: self)
@@ -69,22 +72,33 @@ import UIKit
     @objc public func loadAllContacts() {
         self.service?.contacts(completion: { [weak self] error, contacts in
             if error == nil {
-                let infos = contacts.map({
-                    let profile = EaseProfile()
-                    profile.id = $0.userId
-                    profile.nickName = $0.remark ?? ""
-                    profile.type = .contact
-                    return profile
-                })
-                self?.driver?.refreshList(infos: infos)
-                if let titles = self?.driver?.indexTitles() {
-                    self?.indicatorDriver?.refresh(titles: titles)
-                }
+                self?.driver?.refreshList(infos: self?.filterContacts(contacts: contacts) ?? [])
             } else {
                 self?.driver?.occurError()
                 consoleLogInfo("loadAllContacts error:\(error?.errorDescription ?? "")", type: .error)
             }
         })
+    }
+    
+    private func filterContacts(contacts: [Contact]) -> [EaseProfileProtocol] {
+        var users = [Contact]()
+        if self.ignoreContacts.isEmpty {
+            users.append(contentsOf: contacts)
+        } else {
+            for contact in contacts {
+                if !self.ignoreContacts.contains(where: { $0 == contact.userId }) {
+                    users.append(contact)
+                }
+            }
+        }
+        let infos = users.map({
+            let profile = EaseProfile()
+            profile.id = $0.userId
+            profile.nickName = $0.remark ?? ""
+            profile.type = .contact
+            return profile
+        })
+        return infos
     }
 }
 
@@ -111,7 +125,8 @@ extension ContactViewModel: ContactEventsResponse {
     
     public func friendRequestDidReceive(by userId: String) {
         self.newFriends[userId] = Date().timeIntervalSince1970
-        if let item = Appearance.Contact.headerExtensionActions.first(where: { $0.featureIdentify == "NewFriendRequest" }) {
+        if let index = Appearance.contact.headerExtensionActions.firstIndex(where: { $0.featureIdentify == "NewFriendRequest" }) {
+            let item = Appearance.contact.headerExtensionActions[index]
             item.showBadge = true
             item.numberCount = UInt(self.newFriends.count)
             self.driver?.refreshHeader(info: item)
@@ -142,7 +157,7 @@ extension ContactViewModel: MultiDeviceListener {
 
 extension ContactViewModel: ContactListActionEventsDelegate {
     public func onContactListScroll(indexPath: IndexPath) {
-        self.indicatorDriver?.selectItem(indexPath: indexPath)
+        
     }
     
     public func onContactListOccurErrorWhenFetchServer() {
@@ -154,9 +169,6 @@ extension ContactViewModel: ContactListActionEventsDelegate {
             let infoMap_OC = [2:ids]
             self.provider_OC?.fetchProfiles(profilesMap: infoMap_OC, completion: { [weak self] profiles in
                 self?.driver?.refreshProfiles(infos: profiles)
-                if let titles = self?.driver?.indexTitles() {
-                    self?.indicatorDriver?.refresh(titles: titles)
-                }
             })
         }
         if self.provider != nil {
@@ -165,9 +177,6 @@ extension ContactViewModel: ContactListActionEventsDelegate {
                 let profiles = await self.provider?.fetchProfiles(profilesMap: infoMap) ?? []
                 DispatchQueue.main.async {
                     self.driver?.refreshProfiles(infos: profiles)
-                    if let titles = self.driver?.indexTitles() {
-                        self.indicatorDriver?.refresh(titles: titles)
-                    }
                 }
             }
         }
@@ -175,7 +184,7 @@ extension ContactViewModel: ContactListActionEventsDelegate {
     
     
     public func didSelected(indexPath: IndexPath, profile: EaseProfileProtocol) {
-        self.viewContact?(profile)
+         self.viewContact?(profile)
     }
     
 }

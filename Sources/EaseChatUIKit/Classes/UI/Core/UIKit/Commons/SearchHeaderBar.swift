@@ -39,7 +39,7 @@ import UIKit
     }()
     
     lazy var icon: UIImageView = {
-        UIImageView(frame: CGRect(x: 8, y: 4, width: self.leftView.frame.height-8, height: self.leftView.frame.height-8)).contentMode(.scaleAspectFit).backgroundColor(.clear)
+        UIImageView(frame: CGRect(x: 8, y: self.leftView.frame.height/2.0-11, width: 22, height: 22)).contentMode(.scaleAspectFit).backgroundColor(.clear)
     }()
     
     lazy var searchField: UITextField = {
@@ -92,6 +92,7 @@ extension SearchHeaderBar: UITextFieldDelegate {
     public func textFieldDidEndEditing(_ textField: UITextField) {
         self.textFieldState?(.end)
     }
+    
 }
 
 extension SearchHeaderBar: ThemeSwitchProtocol {

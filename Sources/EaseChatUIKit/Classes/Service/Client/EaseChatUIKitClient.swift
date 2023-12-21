@@ -18,6 +18,9 @@ import Foundation
         
         /// Whether to play a sound when new messages are received
         var soundOnReceivedNewMessage = true
+        
+        /// Whether load messages from local database.
+        var loadHistoryMessages = true
     }
     
     @objcMembers public class UIOptions: NSObject {
@@ -48,9 +51,9 @@ import Foundation
     
     /// Login user.
     /// - Parameters:
-    ///   - user: An instance that conforms to ``UserInfoProtocol``.
+    ///   - user: An instance that conforms to ``EaseProfileProtocol``.
     ///   - token: The user chat token.
-    @objc public func login(user: UserInfoProtocol,token: String,completion: @escaping (ChatError?) -> Void) {
+    @objc public func login(user: EaseProfileProtocol,token: String,completion: @escaping (ChatError?) -> Void) {
         EaseChatUIKitContext.shared?.currentUser = user
         self.userService = UserServiceImplement(userInfo: user, token: token, completion: completion)
     }
@@ -67,9 +70,9 @@ import Foundation
     
     /// Updates user information that is used for login with the `login(with user: UserInfoProtocol,token: String,use userProperties: Bool = true,completion: @escaping (ChatError?) -> Void)` method.
     /// - Parameters:
-    ///   - info: An instance that conforms to ``UserInfoProtocol``.
+    ///   - info: An instance that conforms to ``EaseProfileProtocol``.
     ///   - completion: Callback.
-    @objc public func updateUserInfo(info: UserInfoProtocol,completion: @escaping (ChatError?) -> Void) {
+    @objc public func updateUserInfo(info: EaseProfileProtocol,completion: @escaping (ChatError?) -> Void) {
         self.userService?.updateUserInfo(userInfo: info, completion: { success, error in
             completion(error)
         })

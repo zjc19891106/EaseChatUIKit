@@ -8,37 +8,43 @@
 import UIKit
 
 @objc open class ContactListHeader: UITableView {
+        
+    @UserDefault("EaseChatUIKit_contact_new_request", defaultValue: Dictionary<String,Double>()) private var newFriends
     
-    public private(set) var datas: [ContactListHeaderItemProtocol] = []
-
-    internal override init(frame: CGRect, style: UITableView.Style) {
+    override init(frame: CGRect, style: UITableView.Style) {
         super.init(frame: frame, style: style)
-        self.tableFooterView(UIView()).dataSource(self).delegate(self).separatorStyle(.none).rowHeight(Appearance.Contact.headerRowHeight).registerCell(ContactListHeaderCell.self, forCellReuseIdentifier: "ContactListHeaderCell").showsVerticalScrollIndicator(false)
-    }
-    
-    @objc public required convenience init(frame: CGRect, style: UITableView.Style,items: [ContactListHeaderItemProtocol]) {
-        self.init(frame: frame, style: style)
         self.isScrollEnabled = false
-        self.datas = items
-        self.reloadData()
+        self.tableFooterView(UIView()).dataSource(self).delegate(self).separatorStyle(.none).rowHeight(Appearance.contact.headerRowHeight).registerCell(ContactListHeaderCell.self, forCellReuseIdentifier: "ContactListHeaderCell").showsVerticalScrollIndicator(false)
+        self.refresh()
     }
+
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    @objc public func refresh() {
+        for item in Appearance.contact.headerExtensionActions {
+            if item.featureIdentify == "NewFriendRequest" {
+                item.showBadge = !self.newFriends.isEmpty
+                item.showNumber = !self.newFriends.isEmpty
+                item.numberCount = UInt(self.newFriends.count)
+            }
+        }
+        self.reloadData()
+    }
 }
 
 extension ContactListHeader: UITableViewDelegate,UITableViewDataSource {
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        self.datas.count
+        Appearance.contact.headerExtensionActions.count
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "ContactListHeaderCell") as? ContactListHeaderCell else { return ContactListHeaderCell(style: .default, reuseIdentifier: "ContactListHeaderCell") }
         cell.accessoryType = .disclosureIndicator
         cell.selectionStyle = .none
-        if let item = self.datas[safe: indexPath.row] {
+        if let item = Appearance.contact.headerExtensionActions[safe: indexPath.row] {
             cell.refresh(item: item)
         }
         return cell
@@ -46,8 +52,8 @@ extension ContactListHeader: UITableViewDelegate,UITableViewDataSource {
     
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        if let item = self.datas[safe: indexPath.row] {
-            self.datas[safe: indexPath.row]?.actionClosure?(item)
+        if let item = Appearance.contact.headerExtensionActions[safe: indexPath.row] {
+            Appearance.contact.headerExtensionActions[safe: indexPath.row]?.actionClosure?(item)
         }
     }
 }

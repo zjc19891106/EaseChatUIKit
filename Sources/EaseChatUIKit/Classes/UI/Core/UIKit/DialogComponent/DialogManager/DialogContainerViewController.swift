@@ -14,7 +14,7 @@ import UIKit
 @objc final public class DialogContainerViewController:  UIViewController, PresentedViewType {
     
    
-    public var presentedViewComponent: PresentedViewComponent? = PresentedViewComponent(contentSize: Appearance.alertContainerConstraintsSize,destination: .bottomBaseline, canPanDismiss: false)
+    public var presentedViewComponent: PresentedViewComponent? = PresentedViewComponent(contentSize: Appearance.alertContainerConstraintsSize,destination: .bottomBaseline, canTapBGDismiss: true)
 
     var customView: UIView?
 
@@ -35,10 +35,11 @@ import UIKit
 
      - Returns: A new `DialogContainerViewController` instance.
      */
-    @objc public convenience init(custom: UIView,constraintsSize:CGSize = .zero) {
+    @objc public convenience init(custom: UIView,constraintsSize:CGSize = .zero,canPanDismiss: Bool = false) {
         self.init()
         if constraintsSize != .zero {
             self.presentedViewComponent?.contentSize = constraintsSize
+            self.presentedViewComponent?.canTapBGDismiss = canPanDismiss
         }
         self.customView = custom
     }
@@ -46,7 +47,6 @@ import UIKit
     override public func viewDidLoad() {
         super.viewDidLoad()
         if self.customView != nil {
-            self.customView?.cornerRadius(.medium, [.topLeft,.topRight], .clear, 0)
             self.view.addSubview(self.customView!)
         }
     }

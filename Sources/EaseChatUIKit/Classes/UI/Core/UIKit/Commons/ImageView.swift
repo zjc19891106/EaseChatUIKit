@@ -39,4 +39,23 @@ import Combine
             .store(in: &self.cancellables)
     }
 
+    /// Loads an image from the specified URL and sets it as the image of the image view.
+    /// - Parameters:
+    ///   - url: The URL of the image to load.
+    ///   - placeHolder: An optional placeholder image to display while the image is being loaded.
+    ///   - loadFinished: Load finished callback.
+    public func image(with url: String,placeHolder: UIImage?,loadFinished: @escaping (UIImage?) -> Void) {
+        self.image = placeHolder
+        guard let imageURL = URL(string: url) else {
+            return
+        }
+        ImageLoader.shared.loadImage(from: imageURL)
+            .sink(receiveValue: { [weak self] url_image in
+                if url_image != nil {
+                    self?.image = url_image
+                    loadFinished(url_image)
+                }
+            })
+            .store(in: &self.cancellables)
+    }
 }

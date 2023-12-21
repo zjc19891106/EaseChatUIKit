@@ -9,7 +9,7 @@ import UIKit
 
 @objc open class AlertViewController: UIViewController , PresentedViewType {
     
-    public var presentedViewComponent: PresentedViewComponent? = PresentedViewComponent(contentSize: Appearance.alertContainerConstraintsSize,destination: .center)
+    public var presentedViewComponent: PresentedViewComponent?
 
     var customView: UIView?
 
@@ -28,16 +28,20 @@ import UIKit
         - custom: The custom view to be displayed in the dialog container.
      - Returns: A new `AlertViewController` instance.
      */
-    @objc public required convenience init(custom: UIView,size: CGSize) {
+    @objc public required convenience init(custom: UIView,size: CGSize,customPosition: Bool) {
         self.init()
-        self.presentedViewComponent = PresentedViewComponent(contentSize: size,destination: .custom(center: CGPoint(x: ScreenWidth/2.0-custom.frame.width/2.0, y: ScreenHeight/2.0-custom.frame.height/2.0)))
+        if customPosition {
+            self.presentedViewComponent = PresentedViewComponent(contentSize: size,destination: .custom(center: CGPoint(x: ScreenWidth/2.0-custom.frame.width/2.0, y: ScreenHeight/2.0-custom.frame.height/2.0)))
+        } else {
+            self.presentedViewComponent = PresentedViewComponent(contentSize: size,destination: .center)
+        }
         self.customView = custom
     }
 
     override public func viewDidLoad() {
         super.viewDidLoad()
         if self.customView != nil {
-            self.customView?.cornerRadius(Appearance.alertCornerRadius)
+            self.customView?.cornerRadius(Appearance.alertStyle == .small ? .extraSmall:.medium)
             self.view.addSubview(self.customView!)
         }
     }
@@ -213,6 +217,12 @@ import UIKit
         textField.layer.masksToBounds = true
         return self
     }
+    @discardableResult
+    public func textFieldRadius(cornerRadius: CornerRadius) -> AlertView {
+        textField.cornerRadius(cornerRadius)
+        return self
+    }
+    
     public func textField(showBottomDivider: Bool) -> AlertView {
         textFieldLineView.isHidden = !showBottomDivider
         return self
@@ -221,6 +231,7 @@ import UIKit
         textFieldLineView.backgroundColor = bottomDividerColor
         return self
     }
+    @discardableResult
     public func textFieldBackground(color: UIColor?) -> AlertView {
         textField.backgroundColor = color
         return self
@@ -278,6 +289,13 @@ import UIKit
         leftButton.layer.masksToBounds = true
         return self
     }
+    
+    @discardableResult
+    public func leftButtonRadius(cornerRadius: CornerRadius) -> AlertView {
+        leftButton.cornerRadius(cornerRadius == .large ? 25:CGFloat(cornerRadius.rawValue))
+        return self
+    }
+    
     @discardableResult
     public func leftButtonBackground(color: UIColor?) -> AlertView {
         leftButton.backgroundColor = color
@@ -320,6 +338,13 @@ import UIKit
         rightButton.layer.masksToBounds = true
         return self
     }
+    
+    @discardableResult
+    public func rightButtonRadius(cornerRadius: CornerRadius) -> AlertView {
+        rightButton.cornerRadius(cornerRadius == .large ? 25:CGFloat(cornerRadius.rawValue))
+        return self
+    }
+    
     @discardableResult
     public func rightButtonBackground(color: UIColor?) -> AlertView {
         rightButton.backgroundColor = color

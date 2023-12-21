@@ -34,21 +34,16 @@ import UIKit
     
     @objc required public override init(frame: CGRect, style: UITableView.Style) {
         super.init(frame: frame, style: style)
-        self.delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).registerCell(ComponentsRegister.shared.ConversationCell.self , forCellReuseIdentifier: "EaseChatUIKit.ConversationCell").rowHeight(Appearance.Conversation.rowHeight).backgroundColor(.clear)
-//        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressedAction(gesture:)))
-//        longPress.minimumPressDuration = 1
-//        self.addGestureRecognizer(longPress)
-//        let refreshControl = UIRefreshControl()
-//        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
-//        self.refreshControl = refreshControl
+        self.delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).registerCell(ComponentsRegister.shared.ConversationCell.self , forCellReuseIdentifier: "EaseChatUIKit.ConversationCell").rowHeight(Appearance.conversation.rowHeight).backgroundColor(.clear)
         Theme.registerSwitchThemeViews(view: self)
-        
-        NotificationCenter.default.addObserver(forName: NSNotification.Name("EaseUIKit_do_not_disturb_changed"), object: nil, queue: .main) { [weak self] notify in
+        self.switchTheme(style: Theme.style)
+        NotificationCenter.default.addObserver(forName: Notification.Name("EaseUIKit_do_not_disturb_changed"), object: nil, queue: .main) { [weak self] notify in
             if let userInfo = notify.userInfo {
                 if let id = userInfo["id"] as? String {
-                    if let item = self?.datas.first(where: { $0.id == id }) {
+                    if let index = self?.datas.firstIndex(where: { $0.id == id }) {
                         if let doNotDisturb = userInfo["value"] as? Bool {
-                            item.doNotDisturb = doNotDisturb
+                            self?.datas[safe: index]?.doNotDisturb = doNotDisturb
+                            self?.reloadRows(at: [IndexPath(row: index, section: 0)], with: .none)
                         }
                     }
                 }
@@ -58,7 +53,7 @@ import UIKit
     
     @objc private func refreshData() {
         self.refreshControl?.attributedTitle = NSAttributedString {
-            AttributedText(Appearance.Conversation.refreshAlert).font(Font.theme.bodyLarge).foregroundColor(Theme.style == .dark ? Color.theme.neutralColor5:Color.theme.neutralColor6)
+            AttributedText(Appearance.conversation.refreshAlert).font(Font.theme.bodyLarge).foregroundColor(Theme.style == .dark ? Color.theme.neutralColor5:Color.theme.neutralColor6)
         }
         self.refreshControl?.tintColor = Theme.style == .dark ? Color.theme.neutralColor4:Color.theme.neutralColor6
         for handler in self.eventHandlers.allObjects {
@@ -115,20 +110,23 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
             hooker(indexPath,info)
         } else {
             for listener in self.eventHandlers.allObjects {
+                info.unreadCount = 0
+                info.mentioned = false
                 listener.onConversationDidSelected(indexPath: indexPath, info: info)
             }
+            self.refreshData()
         }
     }
     
     public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard let info = self.datas[safe: indexPath.row] else { return nil }
         if info.doNotDisturb {
-            if let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .unmute }) {
-                Appearance.Conversation.swipeLeftActions[index] = .unmute
+            if let index = Appearance.conversation.swipeLeftActions.firstIndex(where: { $0 == .unmute }) {
+                Appearance.conversation.swipeLeftActions[index] = .unmute
             }
         } else {
-            if let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .unmute }) {
-                Appearance.Conversation.swipeLeftActions[index] = .mute
+            if let index = Appearance.conversation.swipeLeftActions.firstIndex(where: { $0 == .unmute }) {
+                Appearance.conversation.swipeLeftActions[index] = .mute
             }
         }
         return UISwipeActionsConfiguration(actions: self.actions(leading: false,info: info,indexPath: indexPath))
@@ -142,7 +140,7 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
     private func actions(leading: Bool,info: ConversationInfo,indexPath: IndexPath) -> [UIContextualActionChatUIKit] {
         var rightActions = [UIContextualActionType]()
         var leftActions = [UIContextualActionType]()
-        for action in Appearance.Conversation.swipeRightActions {
+        for action in Appearance.conversation.swipeRightActions {
             if action == .read {
                 if info.unreadCount > 0 {
                     rightActions.append(action)
@@ -151,19 +149,19 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
                 rightActions.append(action)
             }
         }
-        if info.pinned,let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .pin }) {
-            Appearance.Conversation.swipeLeftActions[index] = .unpin
+        if info.pinned,let index = Appearance.conversation.swipeLeftActions.firstIndex(where: { $0 == .pin }) {
+            Appearance.conversation.swipeLeftActions[index] = .unpin
         }
-        if !info.pinned,let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .unpin }) {
-            Appearance.Conversation.swipeLeftActions[index] = .pin
+        if !info.pinned,let index = Appearance.conversation.swipeLeftActions.firstIndex(where: { $0 == .unpin }) {
+            Appearance.conversation.swipeLeftActions[index] = .pin
         }
-        if info.doNotDisturb,let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .mute }) {
-            Appearance.Conversation.swipeLeftActions[index] = .unmute
+        if info.doNotDisturb,let index = Appearance.conversation.swipeLeftActions.firstIndex(where: { $0 == .mute }) {
+            Appearance.conversation.swipeLeftActions[index] = .unmute
         }
-        if !info.doNotDisturb,let index = Appearance.Conversation.swipeLeftActions.firstIndex(where: { $0 == .unmute }) {
-            Appearance.Conversation.swipeLeftActions[index] = .mute
+        if !info.doNotDisturb,let index = Appearance.conversation.swipeLeftActions.firstIndex(where: { $0 == .unmute }) {
+            Appearance.conversation.swipeLeftActions[index] = .mute
         }
-        return (leading ? rightActions:Appearance.Conversation.swipeLeftActions).map {
+        return (leading ? rightActions:Appearance.conversation.swipeLeftActions).map {
             switch $0 {
             case .more:
                 return UIContextualActionChatUIKit(title: "conversation_right_slide_menu_more".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
@@ -233,8 +231,8 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
             }
         }
         if !unknownInfoIds.isEmpty {
-            for eventHandle in self.eventHandlers.allObjects {
-                eventHandle.onConversationListEndScrollNeededDisplayInfos(ids: unknownInfoIds)
+            for eventHandler in self.eventHandlers.allObjects {
+                eventHandler.onConversationListEndScrollNeededDisplayInfos(ids: unknownInfoIds)
             }
         }
     }

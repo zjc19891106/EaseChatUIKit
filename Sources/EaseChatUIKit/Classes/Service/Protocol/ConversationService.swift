@@ -79,6 +79,13 @@ import Foundation
     
     /// Mark all of the history messages as already read.
     func markAllMessagesAsRead(conversationId: String)
+    
+    /// Load a session and create one if it does not exist
+    /// - Parameters:
+    ///   - conversationId: The ID of the conversation.
+    ///   - type: The ``ChatConversationType`` of the conversation.
+    /// - Returns: ``ChatConversation`` object.
+    func loadIfNotExistCreate(conversationId: String,type: ChatConversationType) -> ChatConversation?
 }
 
 @objc public protocol ConversationServiceListener: NSObjectProtocol {

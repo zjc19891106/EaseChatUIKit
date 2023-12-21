@@ -245,7 +245,7 @@ extension Component {
         return self.paragraphStyle(paragraphStyle)
     }
 
-    public func lineBreakeMode(_ lineBreakMode: NSLineBreakMode) -> Component {
+    public func lineBreakMode(_ lineBreakMode: NSLineBreakMode) -> Component {
         let paragraphStyle = getMutableParagraphStyle()
         paragraphStyle.lineBreakMode = lineBreakMode
         return self.paragraphStyle(paragraphStyle)
@@ -333,13 +333,22 @@ extension NSAttributedString {
         public let attributes: Attributes = [:]
         private let attachment: NSTextAttachment
 
-        public init(_ image: UIImage, size: Size? = nil) {
+        public init(_ image: UIImage?, size: Size? = nil) {
             let attachment = NSTextAttachment()
             attachment.image = image
 
             if let size = size {
                 attachment.bounds.size = size
             }
+
+            self.attachment = attachment
+        }
+        
+        public init(_ image: UIImage?, bounds: CGRect) {
+            let attachment = NSTextAttachment()
+            attachment.image = image
+
+            attachment.bounds = bounds
 
             self.attachment = attachment
         }

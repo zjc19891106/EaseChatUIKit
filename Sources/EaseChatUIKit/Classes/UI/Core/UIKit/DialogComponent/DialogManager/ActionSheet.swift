@@ -16,29 +16,29 @@ import UIKit
  The ActionSheet conforms to the ThemeSwitchProtocol, which allows it to switch between light and dark themes.
  */
 
-@objc open class ActionSheet: UIView {
+@objcMembers open class ActionSheet: UIView {
         
     public var items: [ActionSheetItemProtocol] = []
     
-    public private(set) var actionClosure: ActionClosure?
+    public private(set) var actionClosure: ((ActionSheetItemProtocol) -> Void)?
     
-    lazy var indicator: UIView = {
+    public private(set) lazy var indicator: UIView = {
         UIView(frame: CGRect(x: self.frame.width/2.0-18, y: 6, width: 36, height: 5)).cornerRadius(2.5).backgroundColor(UIColor.theme.neutralColor8)
     }()
     
-    lazy var titleContainer: UILabel = {
+    public private(set) lazy var titleContainer: UILabel = {
         UILabel(frame: CGRect(x: 20, y: self.indicator.frame.maxY+16, width: self.frame.width-40, height: 22)).textColor(UIColor.theme.neutralColor1).font(UIFont.theme.titleMedium).textAlignment(.center)
     }()
     
-    lazy var messageContainer: UILabel = {
+    public private(set) lazy var messageContainer: UILabel = {
         UILabel(frame: CGRect(x: 16, y: self.titleContainer.frame.maxY+5, width: self.frame.width-32, height: .greatestFiniteMagnitude)).textColor(UIColor.theme.neutralColor5).font(UIFont.theme.bodyMedium).textAlignment(.center).numberOfLines(5)
     }()
     
-    lazy var dividingLine: UIView = {
+    public private(set) lazy var dividingLine: UIView = {
         UIView(frame: CGRect(x: 16, y: self.messageContainer.frame.maxY+12, width: ScreenWidth-32, height: 0.5)).backgroundColor(UIColor.theme.neutralColor9)
     }()
     
-    lazy var menuList: UITableView = {
+    public private(set) lazy var menuList: UITableView = {
         UITableView(frame: CGRect(x: 0, y: self.messageContainer.frame.maxY+5, width: self.frame.width, height: CGFloat(Int(Appearance.actionSheetRowHeight)*self.items.count + 8)), style: .plain).delegate(self).dataSource(self).registerCell(ActionSheetCell.self, forCellReuseIdentifier: "ActionSheetCell").rowHeight(Appearance.actionSheetRowHeight).separatorColor(UIColor.theme.neutralColor9).backgroundColor(UIColor.theme.neutralColor95).tableFooterView(UIView(frame: CGRect(x: 0, y: 0, width: self.frame.width, height: 8)).backgroundColor(UIColor.theme.neutralColor95)).separatorStyle(.singleLine)
     }()
     
@@ -60,7 +60,7 @@ import UIKit
      
      - Returns: An initialized ActionSheet object.
      */
-    @objc public convenience init(items:[ActionSheetItemProtocol],title: String? = nil,message: String? = nil,action: @escaping ActionClosure) {
+    @objc public convenience init(items:[ActionSheetItemProtocol],title: String? = nil,message: String? = nil,action: @escaping (ActionSheetItemProtocol) -> Void) {
         let messageHeight = (message?.chat.sizeWithText(font: UIFont.theme.bodyMedium, size: CGSize(width: ScreenWidth-32, height: ScreenHeight/3.0)).height ?? 0)
         var contentHeight = 11+Int(Appearance.actionSheetRowHeight)*items.count+Int(Appearance.actionSheetRowHeight)+8+Int(BottomBarHeight)
         if messageHeight > 0 {
@@ -147,7 +147,7 @@ extension ActionSheet: UITableViewDelegate,UITableViewDataSource {
         cell?.textLabel?.text = item.title
         cell?.textLabel?.font = .systemFont(ofSize: 16, weight: .regular)
         cell?.textLabel?.textAlignment = item.image == nil ? .center:.left
-        cell?.imageView?.image = item.image
+        cell?.imageView?.image = Theme.style == .dark ? item.image?.withTintColor(UIColor.theme.primaryColor6):item.image?.withTintColor(UIColor.theme.primaryColor5)
         cell?.textLabel?.numberOfLines = 2
         cell?.textLabel?.backgroundColor = .clear
         if Theme.style == .light {

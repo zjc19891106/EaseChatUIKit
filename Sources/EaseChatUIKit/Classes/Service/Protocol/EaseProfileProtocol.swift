@@ -20,9 +20,15 @@ import Foundation
     var nickName: String {set get}
     var avatarURL: String {set get}
     var type: EaseProfileProviderType {set get}
+    
+    func toJsonObject() -> Dictionary<String,Any>?
 }
 
 @objcMembers open class EaseProfile:NSObject, EaseProfileProtocol {
+    public func toJsonObject() -> Dictionary<String, Any>? {
+        ["ease_chat_uikit_info":["nickname":self.nickName,"avatarURL":self.avatarURL]]
+    }
+    
     
     public var id: String = ""
     
@@ -34,6 +40,10 @@ import Foundation
     
     public var selected: Bool = false
     
+    public override func setValue(_ value: Any?, forUndefinedKey key: String) {
+        
+    }
+        
 }
 
 /// Profile provider of the EaseChatUIKit.Only available in Swift language.
@@ -91,6 +101,12 @@ public protocol EaseGroupMemberProfileProvider {
     ///   - userIds: The id of the user.
     /// - Returns: Callback,obtain Array  of conform ``EaseProfileProtocol`` object.
     func fetchMembers(groupId:String, userIds:[String]) async -> [EaseProfileProtocol]
+    
+    /// Update cache user info of group participant.
+    /// - Parameters:
+    ///   - groupId: The ID of group
+    ///   - profiles: The profile array you want to update.
+    func updateMember(groupId: String,profiles:[EaseProfileProtocol])
  
 }
 
@@ -115,4 +131,12 @@ public extension EaseGroupMemberProfileProvider {
     ///   - userIds: The id of the user.
     /// - Returns: Callback,obtain Array  of conform ``EaseProfileProtocol`` object.
     func fetchMembers(groupId:String, userIds:[String], completion: @escaping ([EaseProfileProtocol]) -> Void)
+    
+    /// Update cache user info of group participant.
+    /// - Parameters:
+    ///   - groupId: The ID of group
+    ///   - profiles: The profile array you want to update.
+    func updateMember(groupId: String,profiles:[EaseProfileProtocol])
 }
+
+

@@ -34,7 +34,6 @@ import UIKit
                 let imageAttachment = NSTextAttachment()
                 imageAttachment.image = UIImage(named: "copy", in: .chatBundle, with: nil)?.withTintColor(Theme.style == .dark ? UIColor.theme.neutralColor4:UIColor.theme.neutralColor6)
                 imageAttachment.bounds = CGRect(x: 0, y: -3, width: imageAttachment.image?.size.width ?? 0, height: imageAttachment.image?.size.height ?? 0)
-                imageAttachment
                 let imageAttribute = NSAttributedString(attachment: imageAttachment)
                 text.append(imageAttribute)
                 self.detail.setAttributedTitle(text, for: .normal)
@@ -42,7 +41,7 @@ import UIKit
         }
     }
     
-    private let itemWidth = Appearance.Contact.detailInfoActionItems.count > 3 ? ((ScreenWidth-8*CGFloat(Appearance.Contact.detailInfoActionItems.count-1))/CGFloat(Appearance.Contact.detailInfoActionItems.count)):(114*ScreenWidth/390.0)
+    private let itemWidth = Appearance.contact.detailInfoActionItems.count > 3 ? ((ScreenWidth-8*CGFloat(Appearance.contact.detailInfoActionItems.count-1))/CGFloat(Appearance.contact.detailInfoActionItems.count)):(114*ScreenWidth/390.0)
     
     public private(set) lazy var avatar: ImageView = {
         ImageView(frame: CGRect(x: self.frame.width/2.0-50, y: 20, width: 100, height: 100)).cornerRadius(Appearance.avatarRadius).backgroundColor(.clear)
@@ -79,15 +78,19 @@ import UIKit
 
     internal override init(frame: CGRect) {
         super.init(frame: frame)
-        self.addSubViews([self.avatar,self.status,self.nickName,self.detail,self.itemList])
-        self.itemList.frame = CGRect(x: 20, y: self.detail.frame.maxY+20, width: self.itemWidth, height: 62)
-        self.itemList.center = CGPoint(x: self.center.x, y: self.itemList.center.y)
-        Theme.registerSwitchThemeViews(view: self)
-        self.switchTheme(style: Theme.style)
     }
     
-    @objc public required convenience init(frame: CGRect, placeHolder: UIImage?) {
+    @objc public required convenience init(frame: CGRect,showMenu: Bool ,placeHolder: UIImage?) {
         self.init(frame: frame)
+        if showMenu {
+            self.addSubViews([self.avatar,self.status,self.nickName,self.detail,self.itemList])
+            self.itemList.frame = CGRect(x: 20, y: self.detail.frame.maxY+20, width: self.itemWidth, height: 62)
+            self.itemList.center = CGPoint(x: self.center.x, y: self.itemList.center.y)
+        } else {
+            self.addSubViews([self.avatar,self.status,self.nickName,self.detail])
+        }
+        Theme.registerSwitchThemeViews(view: self)
+        self.switchTheme(style: Theme.style)
         self.avatar.image = placeHolder
     }
     
@@ -97,17 +100,18 @@ import UIKit
     
     @objc private func copyAction() {
         UIPasteboard.general.string = self.detail.titleLabel?.text?.components(separatedBy: ":").last
+        UIViewController.currentController?.showToast(toast: "Copied".chat.localize)
     }
 }
 
 extension DetailInfoHeader: UICollectionViewDelegate,UICollectionViewDataSource {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        Appearance.Contact.detailInfoActionItems.count
+        Appearance.contact.detailInfoActionItems.count
     }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(with: DetailInfoHeaderExtensionCell.self, reuseIdentifier: "DetailInfoHeaderExtensionCell", indexPath: indexPath) else { return DetailInfoHeaderExtensionCell() }
-        if let item = Appearance.Contact.detailInfoActionItems[safe: indexPath.row] {
+        if let item = Appearance.contact.detailInfoActionItems[safe: indexPath.row] {
             cell.icon.image = item.featureIcon
             cell.title.text = item.featureName
         }
@@ -116,7 +120,7 @@ extension DetailInfoHeader: UICollectionViewDelegate,UICollectionViewDataSource 
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
-        if let item = Appearance.Contact.detailInfoActionItems[safe: indexPath.row] {
+        if let item = Appearance.contact.detailInfoActionItems[safe: indexPath.row] {
             item.actionClosure?(item)
         }
     }

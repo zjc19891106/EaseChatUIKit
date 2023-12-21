@@ -7,10 +7,10 @@
 
 import UIKit
 
-@objc public class ChatServiceImplement: NSObject {
+@objcMembers public class ChatServiceImplement: NSObject {
     private var responseDelegates: NSHashTable<ChatResponseListener> = NSHashTable<ChatResponseListener>.weakObjects()
     
-    private var to = ""
+    public private(set) var to = ""
     
     @objc required public init(to: String) {
         super.init()
@@ -24,6 +24,23 @@ import UIKit
 }
 
 extension ChatServiceImplement: ChatService {
+    public func edit(messageId: String, text: String, completion: @escaping (ChatError?, ChatMessage?) -> Void) {
+        let rawMessage = ChatClient.shared().chatManager?.getMessageWithMessageId(messageId)
+        let body = ChatTextMessageBody(text: text)
+        if let rawBody = rawMessage?.body as? ChatTextMessageBody {
+            body.targetLanguages = rawBody.targetLanguages
+        }
+        ChatClient.shared().chatManager?.modifyMessage(messageId, body: body, completion: { error, message in
+            completion(error,message)
+        })
+    }
+    
+    public func recall(messageId: String, completion: @escaping (ChatError?) -> Void) {
+        ChatClient.shared().chatManager?.recallMessage(withMessageId: messageId, completion: { error in
+            completion(error)
+        })
+    }
+    
     public func bindChatEventsListener(listener: ChatResponseListener) {
         if self.responseDelegates.contains(listener) {
             return
@@ -37,22 +54,29 @@ extension ChatServiceImplement: ChatService {
         }
     }
     
-    public func sendMessage(to: String, body: ChatMessageBody, completion: @escaping (ChatError?, ChatMessage?) -> Void) {
-        let json = EaseChatUIKitContext.shared?.currentUser?.toJsonObject() ?? [:]
-        let message = ChatMessage(conversationID: to, body: body, ext: ["ChatUIKitUserInfo":json])
-        message.chatType = .chat
-        ChatClient.shared().chatManager?.send(message, progress: nil, completion: { message, error in
-            completion(error,message)
-        })
+    public func send(message: ChatMessage, completion: @escaping (ChatError?, ChatMessage?) -> Void) {
+        if let exist = ChatClient.shared().chatManager?.getMessageWithMessageId(message.messageId) {
+            ChatClient.shared().chatManager?.resend(exist, progress: nil,completion: { [weak self] message, error in
+                self?.pushSendNotification(message: message)
+                completion(error,message)
+            })
+        } else {
+            let message = message
+            if let type = ChatClient.shared().chatManager?.getConversationWithConvId(message.to)?.type {
+                message.chatType = (type.rawValue == 0 ? .chat:.groupChat)
+            }
+            
+            ChatClient.shared().chatManager?.send(message, progress: nil, completion: { [weak self] message, error in
+                self?.pushSendNotification(message: message)
+                completion(error,message)
+            })
+        }
     }
     
-    public func sendGroupMessage(to: String, body: ChatMessageBody, completion: @escaping (ChatError?, ChatMessage?) -> Void) {
-        let json = EaseChatUIKitContext.shared?.currentUser?.toJsonObject() ?? [:]
-        let message = ChatMessage(conversationID: to, body: body, ext: ["ChatUIKitUserInfo":json])
-        message.chatType = .groupChat
-        ChatClient.shared().chatManager?.send(message, progress: nil, completion: { message, error in
-            completion(error,message)
-        })
+    private func pushSendNotification(message: ChatMessage?) {
+        if let conversationId = message?.conversationId {
+            NotificationCenter.default.post(name: Notification.Name("EaseChatUIKit_Conversation_last_message_need_update"), object: conversationId)
+        }
     }
     
     public func removeLocalMessage(messageId: String) {
@@ -72,9 +96,16 @@ extension ChatServiceImplement: ChatService {
     }
     
     public func loadMessages(start messageId: String, pageSize: UInt, completion: @escaping (ChatError?, [ChatMessage]) -> Void) {
-        ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.loadMessagesStart(fromId: messageId, count: Int32(pageSize), searchDirection: .up,completion: { messages, error in
-            completion(error,messages ?? [])
-        })
+        if EaseChatUIKitClient.shared.option.option_chat.loadHistoryMessages {
+            ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.loadMessagesStart(fromId: messageId, count: Int32(pageSize), searchDirection: .up,completion: { messages, error in
+                completion(error,messages ?? [])
+            })
+        } else {
+            let type = ChatClient.shared().chatManager?.getConversationWithConvId(self.to)?.type ?? .chat
+            ChatClient.shared().chatManager?.asyncFetchHistoryMessages(fromServer: self.to, conversationType: type, startMessageId: messageId, fetch: .up, pageSize: Int32(pageSize),completion: { result, error in
+                completion(error,result?.list ?? [])
+            })
+        }
     }
     
     public func searchMessage(keyword: String, pageSize: UInt, userId: String, completion: @escaping (ChatError?, [ChatMessage]) -> Void) {
@@ -89,6 +120,12 @@ extension ChatServiceImplement: ChatEventsListener {
     public func messagesDidReceive(_ aMessages: [ChatMessage]) {
         for listener in self.responseDelegates.allObjects {
             for message in aMessages {
+                if let dic = message.ext?["ease_chat_uikit_user_info"] as? Dictionary<String,Any> {
+                    let profile = EaseProfile()
+                    profile.setValuesForKeys(dic)
+                    EaseChatUIKitContext.shared?.chatCache?[message.from] = profile
+                }
+                
                 listener.onMessageDidReceived(message: message)
             }
         }
@@ -104,7 +141,7 @@ extension ChatServiceImplement: ChatEventsListener {
     
     public func messageStatusDidChange(_ aMessage: ChatMessage, error aError: ChatError?) {
         for listener in self.responseDelegates.allObjects {
-            listener.onMessageStatusDidChanged(message: aMessage, error: aError)
+            listener.onMessageStatusDidChanged(message: aMessage, status: aError == nil ? .succeed:.failure, error: aError)
         }
     }
     
@@ -121,7 +158,19 @@ extension ChatServiceImplement: ChatEventsListener {
     }
     
     public func messagesDidDeliver(_ aMessages: [ChatMessage]) {
-        
+        for aMessage in aMessages {
+            for listener in self.responseDelegates.allObjects {
+                listener.onMessageStatusDidChanged(message: aMessage, status: .delivered, error: nil)
+            }
+        }
+    }
+    
+    public func messagesDidRead(_ aMessages: [ChatMessage]) {
+        for aMessage in aMessages {
+            for listener in self.responseDelegates.allObjects {
+                listener.onMessageStatusDidChanged(message: aMessage, status: .read, error: nil)
+            }
+        }
     }
 }
 

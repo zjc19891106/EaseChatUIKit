@@ -15,7 +15,7 @@ import UIKit
     
     private var loadFinished = false
     
-    public private(set) var datas: [ChatGroup] = [] {
+    public private(set) var datas: [EaseProfileProtocol] = [] {
         didSet {
             if self.datas.count <= 0 {
                 self.groupList.backgroundView = self.empty
@@ -38,6 +38,11 @@ import UIKit
             self?.requestGroups()
         }).backgroundColor(.clear)
     }()
+    
+    open override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        self.tabBarController?.tabBar.isHidden = true
+    }
 
     open override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,12 +51,19 @@ import UIKit
         self.navigation.title = "Groups".chat.localize
         self.view.addSubViews([self.navigation,self.groupList])
         //Back button click of the navigation
-        self.navigation.leftItemClick = { [weak self] in
-            self?.pop()
+        self.navigation.clickClosure = { [weak self] in
+            self?.navigationClick(type: $0, indexPath: $1)
         }
         Theme.registerSwitchThemeViews(view: self)
         self.switchTheme(style: Theme.style)
         self.requestGroups()
+    }
+    
+    private func navigationClick(type: EaseChatNavigationBarClickEvent,indexPath: IndexPath?) {
+        switch type {
+        case .back: self.pop()
+        default: break
+        }
     }
     
     private func pop() {
@@ -68,7 +80,12 @@ import UIKit
                 guard let `self` = self else { return }
                 if error == nil {
                     if let groups = groups {
-                        self.datas.append(contentsOf: groups)
+                        self.datas.append(contentsOf: groups.map({
+                            let profile = EaseProfile()
+                            profile.id = $0.groupId
+                            profile.nickName = $0.groupName
+                            return profile
+                        }))
                         self.groupList.reloadData()
                         if groups.count >= 20 {
                             self.page += 1
@@ -106,7 +123,7 @@ extension JoinedGroupsViewController: UITableViewDelegate,UITableViewDataSource 
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         if let group = self.datas[safe: indexPath.row] {
-            self.chatTo(group: group)
+            self.chatTo(group: group.id)
         }
     }
     
@@ -116,9 +133,23 @@ extension JoinedGroupsViewController: UITableViewDelegate,UITableViewDataSource 
         }
     }
     
-    private func chatTo(group: ChatGroup) {
-        let vc = GroupInfoViewController(group: group)
+    private func chatTo(group: String) {
+        let vc = GroupInfoViewController(group: group) { [weak self] groupId, name in
+            self?.refreshGroup(groupId: groupId, name: name)
+        }
         ControllerStack.toDestination(vc: vc)
+    }
+    
+    private func refreshGroup(groupId: String,name: String) {
+        var idx = 0
+        for (index,profile) in self.datas.enumerated() {
+            if profile.id == groupId {
+                idx = index
+                profile.nickName = name
+                break
+            }
+        }
+        self.groupList.reloadRows(at: [IndexPath(row: idx, section: 0)], with: .automatic)
     }
 }
 

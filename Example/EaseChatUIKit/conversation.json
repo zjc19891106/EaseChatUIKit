@@ -1,0 +1,26 @@
+{
+"datas": [
+    {
+        "id":"1",
+        "avatarURL":"https://a1.easemob.com/easemob/chatroom-uikit/chatfiles/c8354a50-79f8-11ee-97b9-0d7ccd9e7127",
+        "nickName":"001",
+        "unreadCount":1,
+        "noDisturb":false
+    },
+    {
+        "id":"1",
+        "avatarURL":"https://a1.easemob.com/easemob/chatroom-uikit/chatfiles/99296020-79f8-11ee-8475-c7a7b59db79f",
+        "nickName":"002",
+        "unreadCount":2,
+        "noDisturb":false
+    },
+    {
+        "id":"1",
+        "avatarURL":"https://a1.easemob.com/easemob/chatroom-uikit/chatfiles/a27bd9a0-79f8-11ee-8f83-551faec94303",
+        "nickName":"003",
+        "unreadCount":3,
+        "noDisturb":false
+    }
+]
+
+}

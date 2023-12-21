@@ -74,7 +74,7 @@ import UIKit
         if self.hasText {
             return
         }
-        var newRect = CGRect()
+        var newRect = rect
         let size = self.placeHolder.chat.sizeWithText(font: self.font ?? UIFont.theme.bodyLarge, size: rect.size)
         newRect.size.width = size.width-20
         newRect.size.height = size.height

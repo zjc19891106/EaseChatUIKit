@@ -60,7 +60,9 @@ import Foundation
             UIColor.ColorTheme.switchHues(hues: [Appearance.primaryHue,Appearance.secondaryHue,Appearance.errorHue,Appearance.neutralHue,Appearance.neutralSpecialHue])
         }
         for view in self.registerViews.allObjects {
-            view.switchTheme(style: style)
+            if view.conforms(to: ThemeSwitchProtocol.self) {
+                view.switchTheme(style: style)
+            }
         }
     }
     

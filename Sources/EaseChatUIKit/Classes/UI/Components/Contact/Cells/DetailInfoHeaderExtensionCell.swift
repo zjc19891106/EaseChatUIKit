@@ -21,6 +21,7 @@ import UIKit
         super.init(frame: frame)
         self.contentView.addSubViews([self.icon,self.title])
         Theme.registerSwitchThemeViews(view: self)
+        self.switchTheme(style: Theme.style)
     }
     
     required public init?(coder: NSCoder) {
@@ -29,9 +30,8 @@ import UIKit
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        self.contentView.cornerRadius(.small)
         self.icon.translatesAutoresizingMaskIntoConstraints = false
-        self.icon.topAnchor.constraint(equalTo: self.topAnchor, constant: 0)
+        self.icon.topAnchor.constraint(equalTo: self.topAnchor, constant: 8).isActive = true
         self.icon.widthAnchor.constraint(equalToConstant: 32).isActive = true
         self.icon.heightAnchor.constraint(equalToConstant: 32).isActive = true
         self.icon.centerXAnchor.constraint(equalTo: self.centerXAnchor).isActive = true
@@ -41,13 +41,15 @@ import UIKit
         self.title.centerXAnchor.constraint(equalTo: self.centerXAnchor).isActive = true
         self.title.widthAnchor.constraint(equalTo: self.widthAnchor,constant: -10).isActive = true
         self.title.heightAnchor.constraint(equalToConstant: 14).isActive = true
+        
+        self.contentView.cornerRadius(.small)
     }
     
 }
 
 extension DetailInfoHeaderExtensionCell: ThemeSwitchProtocol {
     public func switchTheme(style: ThemeStyle) {
-        self.contentView.backgroundColor = style == .dark ? UIColor.theme.neutralColor2:UIColor.theme.neutralColor98
+        self.contentView.backgroundColor = style == .dark ? UIColor.theme.neutralColor3:UIColor.theme.neutralColor95
         self.title.textColor = style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5
     }
 }

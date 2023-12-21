@@ -13,10 +13,12 @@ class ControllerStack {
     static func toDestination(vc: UIViewController) {
         if let current = UIViewController.currentController {
             if current.navigationController != nil {
+                current.hidesBottomBarWhenPushed = true
                 current.navigationController?.pushViewController(vc, animated: true)
                 return
             } else {
                 if current.presentedViewController?.navigationController != nil {
+                    current.presentedViewController?.hidesBottomBarWhenPushed = true
                     current.presentedViewController?.navigationController?.pushViewController(vc, animated: true)
                     return
                 } else {

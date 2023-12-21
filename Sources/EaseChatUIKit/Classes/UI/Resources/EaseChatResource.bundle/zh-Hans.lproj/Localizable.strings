@@ -1,6 +1,7 @@
 "Send"="发送";
 "Joined"="已加入";
 "Search" = "搜索";
+"Added"="添加了";
 
 "Post Success" = "发布成功";
 "Post Failed" = "发布失败";
@@ -20,16 +21,24 @@
 "You were kicked out of the chatroom" = "您已经被踢出聊天室";
 "StartChat" = "说点什么";
 
+"message doesn't exist" = "消息不存在";
+"Replying" = "回复 ";
 "Violation options" = "违规选项";
-"barrage_long_press_menu_privatechat" = "私信";
 "barrage_long_press_menu_translate" = "翻译";
 "barrage_long_press_menu_delete" = "删除";
-"barrage_long_press_menu_mute" = "禁言";
-"barrage_long_press_menu_unmute" = "解除禁言";
+"barrage_long_press_menu_recall" = "撤回";
+"barrage_long_press_menu_reply" = "回复";
 "barrage_long_press_menu_report" = "举报";
+"barrage_long_press_menu_cancel" = "取消";
+"barrage_long_press_menu_edit" = "编辑";
+"barrage_long_press_menu_copy" = "复制";
 "barrage_long_press_menu_cancel" = "取消";
 "report_button_click_menu_button_cancel" = "取消";
 "Confirm" = "确定";
+"Editing" = "编辑中";
+"Edited" = "已编辑";
+"Mentioned" = "有人@你";
+"recalled a message" = "撤回了一条消息";
 
 
 "participant_list_title" = "成员列表";
@@ -50,9 +59,16 @@
 "participant_list_button_click_menu_remove" = "移除";
 "Your were muted!" = "您已被禁言";
 "new messages" = "条新消息";
+"You have added" = "你已经添加了";
+"to say hello" = "打个招呼吧!";
+"message doesn't exist" = "消息不存在!";
+"Add Contact" = "添加联系人";
+"Copied" = "已复制";
 
+"Create" = "创建";
 "Contact" = "联系人";
 "Add" = "添加";
+"Remove" = "删除";
 "NewRequestDetail" = "请求添加您为好友";
 "Groups" = "群聊";
 "NewRequest" = "新请求";
@@ -63,12 +79,16 @@
 "new_chat_button_click_menu_creategroup" = "创建群组";
 "new_chat_button_click_menu_selectcontacts" = "选择联系人";
 
+"remove_participants" = "删除群成员";
+"group_delete_members_alert" = "你确定删除这";
+"group members" = "群成员";
 "group_details_button_members" = "群成员";
 "group_details_button_alias" = "我在本群的昵称";
 "group_details_switch_donotdisturb" = "消息免打扰";
 "group_details_button_clearchathistory" = "清空聊天记录";
 "group_details_button_name" = "群名称";
 "group_details_button_description" = "群描述";
+"group_details_button_announcement" = "群公告";
 "group_details_extend_button_transfer" = "转移群主";
 "group_details_extend_button_disband" = "解散群组";
 "group_details_extend_button_disband_alert_title" = "解散群组";
@@ -76,9 +96,17 @@
 "group_details_extend_button_leave" = "退出群聊";
 "group_details_extend_button_leave_alert_title" = "退出群聊";
 "group_details_extend_button_leave_alert_subtilte" = "退出群聊将清空消息记录以及会话";
+"Reach content character limit." = "超出最大字符数限制";
+"Group was disabled" = "此群已被禁用";
+"Group" = "群组";
+"has been created." = "创建成功";
+"Save" = "保存";
+"Please input" = "请输入";
+"New Message" = "新消息";
 
 
 "add_contacts_subtitle" = "通过用户ID添加联系人";
+"add_group_members" = "添加群成员";
 
 "conversation_left_slide_menu_delete" = "删除";
 "conversation_left_slide_menu_pin" = "置顶";
@@ -96,3 +124,36 @@
 "contact_details_extend_button_delete_alert_button_confirm" = "确定";
 "contact_details_extend_button_delete_alert_button_cancel" = "取消";
 "contact_details_extend_button_cancel" = "取消";
+
+"remaining..." = "后停止";
+
+
+"permissions disable" = "权限不可用";
+
+"camera_disable" = "相机权限未开启";
+
+"photo_disable" = "相册权限未开启";
+
+"file_disable" = "文件权限未开启";
+
+"input_extension_menu_photo" = "相册";
+
+"input_extension_menu_camera" = "相机";
+
+"input_extension_menu_file" = "文件";
+
+"input_extension_menu_contact" = "个人名片";
+
+"remaining" = "后停止";
+
+"Record" = "录音";
+
+"Recording" = "正在录音";
+
+"Play" = "播放";
+
+"Playing" = "正在播放";
+
+"Loading..." = "下载中...";
+"Share Contact" = "分享联系人";
+"Sharing contact?" = "确认分享联系人?";

@@ -5,15 +5,15 @@ import UIKit
 @objc open class ConversationListController: UIViewController {
     
     public private(set) lazy var navigation: EaseChatNavigationBar = {
-        EaseChatNavigationBar(showLeftItem: true,rightImages: [UIImage(named: "add", in: .chatBundle, with: nil)!])
+        EaseChatNavigationBar( showLeftItem: false,rightImages: [UIImage(named: "add", in: .chatBundle, with: nil)!])
     }()
     
     public private(set) lazy var search: UIButton = {
-        UIButton(type: .custom).frame(CGRect(x: 16, y: self.navigation.frame.maxY+5, width: self.view.frame.width-32, height: 44)).backgroundColor(UIColor.theme.neutralColor95).textColor(UIColor.theme.neutralColor6, .normal).cornerRadius(.large).title(" Search".chat.localize, .normal).image(UIImage(named: "search", in: .chatBundle, with: nil), .normal).addTargetFor(self, action: #selector(searchAction), for: .touchUpInside)
+        UIButton(type: .custom).frame(CGRect(x: 16, y: self.navigation.frame.maxY+5, width: self.view.frame.width-32, height: 44)).backgroundColor(UIColor.theme.neutralColor95).textColor(UIColor.theme.neutralColor6, .normal).title(" Search".chat.localize, .normal).image(UIImage(named: "search", in: .chatBundle, with: nil), .normal).addTargetFor(self, action: #selector(searchAction), for: .touchUpInside).cornerRadius(Appearance.avatarRadius)
     }()
     
     public private(set) lazy var conversationList: ConversationList = {
-        ConversationList(frame: CGRect(x: 0, y: self.search.frame.maxY, width: self.view.frame.width, height: ScreenHeight-NavigationHeight-44-BottomBarHeight), style: .plain)
+        ConversationList(frame: CGRect(x: 0, y: self.search.frame.maxY, width: self.view.frame.width, height: self.view.frame.height-NavigationHeight-44-(self.tabBarController?.tabBar.frame.height ?? 0)), style: .plain)
     }()
     
     public private(set) var viewModel: ConversationViewModel = ConversationViewModel()
@@ -48,7 +48,9 @@ import UIKit
     
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.viewModel.chatId = ""
         self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.tabBarController?.tabBar.isHidden = false
     }
     
     open override func viewDidAppear(_ animated: Bool) {
@@ -65,13 +67,9 @@ import UIKit
         self.viewModel.toChat = { [weak self] in
             self?.toChat(indexPath: $0, info: $1)
         }
-        //Back button click of the navigation
-        self.navigation.leftItemClick = { [weak self] in
-            self?.pop()
-        }
-        //Right buttons click of the navigation
-        self.navigation.rightItemsClick = { [weak self] in
-            self?.rightActions(indexPath: $0)
+        //click of the navigation
+        self.navigation.clickClosure = { [weak self] in
+            self?.navigationClick(type: $0, indexPath: $1)
         }
         
         Theme.registerSwitchThemeViews(view: self)
@@ -79,6 +77,15 @@ import UIKit
         //If you want to listen for notifications about the success or failure of some requests and other events, you can add the following listeners
 //        ConversationListController().viewModel.registerEventsListener(listener: <#T##ConversationEmergencyListener#>)
 //        ConversationListController().viewModel.unregisterEventsListener(listener: <#T##ConversationEmergencyListener#>)
+    }
+    
+    private func navigationClick(type: EaseChatNavigationBarClickEvent,indexPath: IndexPath?) {
+        switch type {
+        case .back: self.pop()
+        case .rightItems: self.rightActions(indexPath: indexPath ?? IndexPath())
+        default:
+            break
+        }
     }
     
     private func pop() {
@@ -90,22 +97,25 @@ import UIKit
     }
     
     private func toChat(indexPath: IndexPath,info: ConversationInfo) {
-        let vc = MessageListController()
+        let vc = MessageListController(conversationId: info.id, parent: "")
         ControllerStack.toDestination(vc: vc)
     }
     
     @objc private func searchAction() {
-        if self.navigationController != nil {
-            self.navigationController?.pushViewController(SearchConversationsController(searchInfos: self.conversationList.datas), animated: true)
-        } else {
-            self.navigationController?.present(SearchConversationsController(searchInfos: self.conversationList.datas), animated: true)
+        var search: SearchConversationsController?
+        search = SearchConversationsController(searchInfos: self.conversationList.datas) {
+            search?.navigationController?.popViewController(animated: false)
+            self.toChat(indexPath: IndexPath(), info: $0)
+        }
+        if let vc = search {
+            self.navigationController?.pushViewController(vc, animated: true)
         }
     }
     
     private func rightActions(indexPath: IndexPath) {
         switch indexPath.row {
         case 0:
-            DialogManager.shared.showActions(actions: Appearance.Conversation.addActions) { item in
+            DialogManager.shared.showActions(actions: Appearance.conversation.addActions) { item in
                 switch item.tag {
                 case "SelectContacts": self.selectContact()
                 case "AddContact": self.addContact()
@@ -121,7 +131,29 @@ import UIKit
     
     private func selectContact() {
         let vc = ContactViewController(headerStyle: .newChat,provider: nil)
-        UIViewController.currentController?.presentingViewController?.present(vc, animated: true)
+        vc.confirmClosure = { [weak self] users in
+            if let profile = users.first {
+                vc.dismiss(animated: true) {
+                    self?.chatToContact(profile: profile)
+                }
+            }
+        }
+        self.present(vc, animated: true)
+    }
+    
+    private func chatToContact(profile: EaseProfileProtocol) {
+        if let info = self.conversationList.datas.first(where: { $0.id == profile.id }) {
+            self.toChat(indexPath: IndexPath(row: 0, section: 0), info: info)
+        } else {
+            self.createChat(profile: profile, info: "")
+        }
+    }
+    
+    private func createChat(profile: EaseProfileProtocol,info: String) {
+        if let info = self.viewModel.loadIfNotExistCreate(profile: profile, text: info) {
+            let vc = MessageListController(conversationId: info.id, parent: "")
+            self.navigationController?.pushViewController(vc, animated: true)
+        }
     }
     
     private func addContact() {
@@ -129,7 +161,7 @@ import UIKit
                                         "add_contacts_subtitle".chat.localize, showCancel: true, showConfirm: true,showTextFiled: true,placeHolder: "contactID".chat.localize) { [weak self] text in
             self?.viewModel.contactService?.addContact(userId: text, invitation: "", completion: { error, userId in
                 if let error = error {
-                    consoleLogInfo("add contact error:\(error.errorDescription)", type: .error)
+                    consoleLogInfo("add contact error:\(error.errorDescription ?? "")", type: .error)
                 }
             })
         }
@@ -137,7 +169,42 @@ import UIKit
     
     private func createGroup() {
         let vc = ContactViewController(headerStyle: .newGroup,provider: nil)
-        UIViewController.currentController?.presentingViewController?.present(vc, animated: true)
+        vc.confirmClosure = { [weak self] profiles in
+            vc.dismiss(animated: true) {
+                self?.create(profiles: profiles)
+            }
+        }
+        self.present(vc, animated: true)
+    }
+    
+    private func create(profiles: [EaseProfileProtocol]) {
+        var name = ""
+        var ids = [String]()
+        for (index,profile) in profiles.enumerated() {
+            if index <= 2 {
+                if index == 0 {
+                    name += (profile.nickName.isEmpty ? profile.id:profile.nickName)
+                } else {
+                    name += (", "+(profile.nickName.isEmpty ? profile.id:profile.nickName))
+                }
+            }
+            ids.append(profile.id)
+        }
+        let option = ChatGroupOption()
+        option.isInviteNeedConfirm = false
+        option.maxUsers = 1000
+        option.style = .privateMemberCanInvite
+        ChatClient.shared().groupManager?.createGroup(withSubject: name, description: "", invitees: ids, message: nil, setting: option, completion: { [weak self] group, error in
+            if error == nil,let group = group {
+                let profile = EaseProfile()
+                profile.id = group.groupId
+                profile.type = .group
+                profile.nickName = group.groupName
+                self?.createChat(profile: profile,info: name)
+            } else {
+                consoleLogInfo("create group error:\(error?.errorDescription ?? "")", type: .error)
+            }
+        })
     }
 }
 
@@ -146,6 +213,7 @@ extension ConversationListController: ThemeSwitchProtocol {
         self.view.backgroundColor = style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98
         self.search.backgroundColor = style == .dark ? UIColor.theme.neutralColor2:UIColor.theme.neutralColor95
         self.navigation.backgroundColor = style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98
+        self.conversationList.reloadData()
     }
     
     

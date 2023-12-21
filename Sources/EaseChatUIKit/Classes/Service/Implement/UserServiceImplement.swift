@@ -13,12 +13,12 @@ import UIKit
     
     /// Init method
     /// - Parameters:
-    ///   - userInfo: ``UserInfoProtocol``
+    ///   - userInfo: ``EaseProfileProtocol``
     ///   - token: Chat token
     ///   - completion: Callback,login successful or failure.
-    @objc public init(userInfo: UserInfoProtocol,token: String,completion: @escaping (ChatError?) -> Void) {
+    @objc public init(userInfo: EaseProfileProtocol,token: String,completion: @escaping (ChatError?) -> Void) {
         super.init()
-        self.login(userId: userInfo.userId, token: token) { success, error in
+        self.login(userId: userInfo.id.lowercased(), token: token) { success, error in
             if !success {
                 let errorInfo = error?.errorDescription ?? ""
                 consoleLogInfo(errorInfo, type: .error)
@@ -49,16 +49,16 @@ extension UserServiceImplement:UserServiceProtocol {
         }
     }
     
-    public func userInfo(userId: String, completion: @escaping (UserInfoProtocol?,ChatError?) -> Void) {
+    public func userInfo(userId: String, completion: @escaping (EaseProfileProtocol?,ChatError?) -> Void) {
         self.userInfos(userIds: [userId]) { infos,error in
             completion(infos.first,error)
         }
     }
     
-    public func userInfos(userIds: [String], completion: @escaping ([UserInfoProtocol],ChatError?) -> Void) {
+    public func userInfos(userIds: [String], completion: @escaping ([EaseProfileProtocol],ChatError?) -> Void) {
         ChatClient.shared().userInfoManager?.fetchUserInfo(byId: userIds,completion: { [weak self] infoMap, error in
             guard let dic = infoMap as? Dictionary<String,UserInfo> else { return }
-            var users = [User]()
+            var users = [EaseProfile]()
             for userId in userIds {
                 if let info = dic[userId] {
                     if let user = self?.convertToUser(info: info) {
@@ -70,7 +70,7 @@ extension UserServiceImplement:UserServiceProtocol {
         })
     }
     
-    public func updateUserInfo(userInfo: UserInfoProtocol, completion: @escaping (Bool, ChatError?) -> Void) {
+    public func updateUserInfo(userInfo: EaseProfileProtocol, completion: @escaping (Bool, ChatError?) -> Void) {
         ChatClient.shared().userInfoManager?.updateOwn(self.convertToUserInfo(user: userInfo),completion: { user, error in
             completion(error == nil,error)
         })
@@ -93,17 +93,17 @@ extension UserServiceImplement:UserServiceProtocol {
         completion(true,nil)
     }
     
-    private func convertToUser(info: UserInfo) -> User {
-        let user = User()
-        user.userId = info.userId ?? ""
+    private func convertToUser(info: UserInfo) -> EaseProfile {
+        let user = EaseProfile()
+        user.id = info.userId ?? ""
         user.nickName = info.nickname ?? ""
         user.avatarURL = info.avatarUrl ?? ""
         return user
     }
     
-    private func convertToUserInfo(user: UserInfoProtocol) -> UserInfo {
+    private func convertToUserInfo(user: EaseProfileProtocol) -> UserInfo {
         let info = UserInfo()
-        info.userId = user.userId
+        info.userId = user.id
         info.nickname = user.nickName
         info.avatarUrl = user.avatarURL
         return info
@@ -159,24 +159,4 @@ extension UserServiceImplement: ChatClientListener {
     }
 }
 
-@objcMembers final public class User:NSObject, UserInfoProtocol {
-    
-    public func toJsonObject() -> Dictionary<String, Any>? {
-        ["userId":self.userId,"nickName":self.nickName,"avatarURL":self.avatarURL]
-    }
-    
-    
-    public var userId: String = ""
-    
-    public var nickName: String = ""
-    
-    public var avatarURL: String = ""
-    
-    public var mute: Bool = false
-    
-    public override func setValue(_ value: Any?, forUndefinedKey key: String) {
-        
-    }
-    
-}
 

@@ -26,6 +26,7 @@ import UIKit
     public override init() {
         super.init()
         ChatClient.shared().chatManager?.add(self, delegateQueue: .main)
+        
     }
     
     deinit {
@@ -34,6 +35,10 @@ import UIKit
 }
 
 extension ConversationServiceImplement: ConversationService {
+    public func loadIfNotExistCreate(conversationId: String, type: ChatConversationType) -> ChatConversation? {
+        ChatClient.shared().chatManager?.getConversation(conversationId, type: type, createIfNotExist: true)
+    }
+    
     
     
     public func loadExistConversations(completion: @escaping ([ConversationInfo],ChatError?) -> Void) {
@@ -61,8 +66,8 @@ extension ConversationServiceImplement: ConversationService {
                             if silentError == nil {
                                 if let list = result?.list {
                                     for item in list {
-                                        if let silentMode = resultSilent?[item.id]?.remindType {
-                                            self.muteMap[EaseChatUIKitContext.shared?.currentUser?.userId ?? ""]?[item.id] = silentMode.rawValue
+                                        if let silentMode = resultSilent?[item.id]?.remindType,silentMode == .mentionOnly {
+                                            self.muteMap[EaseChatUIKitContext.shared?.currentUserId ?? ""]?[item.id] = silentMode.rawValue
                                         }
                                     }
                                     completion(list,silentError)
@@ -98,7 +103,7 @@ extension ConversationServiceImplement: ConversationService {
         if let conversation = ChatClient.shared().chatManager?.getConversationWithConvId(conversationId) {
             ChatClient.shared().pushManager?.setSilentModeForConversation(conversationId, conversationType: conversation.type, params: SilentModeParam(paramType: .remindType),completion: { [weak self] result, error in
                 if error == nil {
-                    self?.muteMap[EaseChatUIKitContext.shared?.currentUser?.userId ?? ""]?[result?.conversationID ?? ""] = 1
+                    self?.muteMap[EaseChatUIKitContext.shared?.currentUserId ?? ""]?[result?.conversationID ?? ""] = 1
                 }
                 self?.handleResult(error: error, type: .setSilent)
                 completion(result,error)
@@ -139,7 +144,7 @@ extension ConversationServiceImplement: ConversationService {
                         if silentError == nil {
                             for item in list {
                                 if let silentMode = resultSilent?[item.conversationId]?.remindType {
-                                    self?.muteMap[EaseChatUIKitContext.shared?.currentUser?.userId ?? ""]?[item.conversationId] = silentMode.rawValue
+                                    self?.muteMap[EaseChatUIKitContext.shared?.currentUserId ?? ""]?[item.conversationId] = silentMode.rawValue
                                 }
                             }
                         }
@@ -181,7 +186,9 @@ extension ConversationServiceImplement: ConversationService {
     }
     
     public func markAllMessagesAsRead(conversationId: String) {
-        ChatClient.shared().chatManager?.getConversationWithConvId(conversationId)?.markAllMessages(asRead: nil)
+        let conversation = ChatClient.shared().chatManager?.getConversationWithConvId(conversationId)
+        conversation?.markAllMessages(asRead: nil)
+        ChatClient.shared().chatManager?.ackConversationRead(conversationId )
     }
     
     public func bindConversationEventsListener(listener: ConversationServiceListener) {
@@ -189,6 +196,13 @@ extension ConversationServiceImplement: ConversationService {
             return
         }
         self.responseDelegates.add(listener)
+        NotificationCenter.default.addObserver(self, selector: #selector(receiveNotify(notification:)), name: Notification.Name("EaseChatUIKit_Conversation_last_message_need_update"), object: nil)
+    }
+    
+    @objc private func receiveNotify(notification: Notification) {
+        if let conversationId = notification.object as? String , let message = ChatClient.shared().chatManager?.getConversationWithConvId(conversationId)?.latestMessage {
+            self.notifyHandler(message: message)
+        }
     }
     
     public func unbindConversationEventsListener(listener: ConversationServiceListener) {
@@ -234,9 +248,11 @@ extension ConversationServiceImplement: ConversationService {
                 }
             }
             conversation.doNotDisturb = false
-            if let silentMode = self.muteMap[EaseChatUIKitContext.shared?.currentUser?.userId ?? ""]?[$0.conversationId] {
+            if let silentMode = self.muteMap[EaseChatUIKitContext.shared?.currentUserId ?? ""]?[$0.conversationId] {
                 conversation.doNotDisturb = silentMode != 0
             }
+            
+            _ = conversation.showContent
             return conversation
         }
     }
@@ -247,19 +263,29 @@ extension ConversationServiceImplement: ChatEventsListener {
     
     public func messagesDidReceive(_ aMessages: [ChatMessage]) {
         for message in aMessages {
-            guard let conversation = ChatClient.shared().chatManager?.getConversationWithConvId(message.to) else {
-                return
+            self.notifyHandler(message: message)
+        }
+    }
+    
+    private func notifyHandler(message: ChatMessage) {
+        guard let conversation = ChatClient.shared().chatManager?.getConversationWithConvId(message.to) else {
+            return
+        }
+        if conversation.ext == nil {
+            conversation.ext = [:]
+        }
+        if !message.mention.isEmpty {
+            conversation.ext?["EaseChatUIKit_mention"] = true
+        }
+        let list = self.mapper(objects: [conversation])
+        for listener in self.responseDelegates.allObjects {
+            if let info = list.first {
+                listener.onConversationLastMessageUpdate(message: message, info: info)
             }
-            let list = self.mapper(objects: [conversation])
-            for listener in self.responseDelegates.allObjects {
-                if let info = list.first {
-                    listener.onConversationLastMessageUpdate(message: message, info: info)
-                }
-            }
-            for handler in self.eventsNotifiers.allObjects {
-                if let info = list.first {
-                    handler.onConversationLastMessageUpdate(message: message, info: info)
-                }
+        }
+        for handler in self.eventsNotifiers.allObjects {
+            if let info = list.first {
+                handler.onConversationLastMessageUpdate(message: message, info: info)
             }
         }
     }

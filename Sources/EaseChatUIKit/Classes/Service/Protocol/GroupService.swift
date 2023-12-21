@@ -7,6 +7,13 @@
 
 import Foundation
 
+@objc public enum GroupInfoEditType: UInt {
+    case name
+    case alias
+    case description
+    case announcement
+}
+
 @objc public protocol GroupService: NSObjectProtocol {
     
     /// Bind group event  changed listener
@@ -36,6 +43,12 @@ import Foundation
     ///   - needRole: Whether the current user role of returned group in the group object in the callback.
     ///   - completion: The request callback contains the group object and error information. If successful, a non-empty group object will be returned. If failed, a non-empty  `Array<ChatGroup>` object will be returned.
     func getJoinedGroups(page: UInt,pageSize: UInt,needMemberCount: Bool,needRole: Bool,completion: @escaping ([ChatGroup]?,ChatError?) -> Void)
+    
+    /// Fetch group info from server.
+    /// - Parameters:
+    ///   - groupId: ID of the group.
+    ///   - completion: Callback,whether success return the ``ChatGroup`` or not ``ChatError``.
+    func fetchGroupInfo(groupId: String,completion: @escaping (ChatGroup?,ChatError?) -> Void)
     //MARK: - operator user
     
     /// Invite users.
@@ -52,6 +65,13 @@ import Foundation
     ///   - groupId: ID of the group.
     ///   - completion: The request callback contains the group object and error information. If successful, a non-empty group object will be returned. If failed, a non-empty group object will be returned.
     func remove(userIds: [String],from groupId: String,completion: @escaping (ChatGroup?,ChatError?) -> Void)
+    
+    /// Transfer group own to another one.
+    /// - Parameters:
+    ///   - groupId: ID of the group
+    ///   - userId: ID of the new owner.
+    ///   - completion: Callback
+    func transfer(groupId: String,userId: String,completion: @escaping (ChatGroup?,ChatError?) -> Void)
     
     /// Add an admin to the group.
     /// - Parameters:
@@ -91,10 +111,11 @@ import Foundation
     
     /// Update announcement of the group.
     /// - Parameters:
-    ///   - announcement: Announcement content.
+    ///   - type: ``GroupInfoEditType``.
+    ///   - content: Content.
     ///   - groupId: ID of the group.
     ///   - completion: The request callback contains the group object and error information. If successful, a non-empty group object will be returned. If failed, a non-empty group object will be returned.
-    func update(announcement: String,groupId: String,completion: @escaping (ChatGroup?,ChatError?) -> Void)
+    func update(type: GroupInfoEditType,content: String,groupId: String,completion: @escaping (ChatGroup?,ChatError?) -> Void)
     
     /// Update extended information in group objects.
     /// - Parameters:
@@ -157,6 +178,26 @@ import Foundation
     ///   - keys: You want fetch attribute keys .
     ///   - completion: The request callback contains the group object and error information. If successful, a empty error object will be returned. If failed, a non-empty group object will be returned.
     func fetchMembersAttribute(groupId: String,userIds: [String],keys:[String],completion: @escaping (ChatError?,Dictionary<String,Dictionary<String,String>>?) -> Void)
+    
+    /// Get participants from server
+    /// - Parameters:
+    ///   - groupId: ID of the group.
+    ///   - cursor: The cursor you can consider as a page number.
+    ///   - pageSize: Page size
+    ///   - completion: callback,result and error
+    func fetchParticipants(groupId: String,cursor: String, pageSize: UInt,completion: @escaping (CursorResult<NSString>?,ChatError?) -> Void)
+    
+    /// Disband a group
+    /// - Parameters:
+    ///   - groupId: ID of the group.
+    ///   - completion: Result callback
+    func disband(groupId: String,completion: @escaping (ChatError?) -> Void)
+    
+    /// Leave a group
+    /// - Parameters:
+    ///   - groupId: ID of the group.
+    ///   - completion: Result callback
+    func leave(groupId: String,completion: @escaping (ChatError?) -> Void)
 }
 
 @objc public protocol GroupServiceListener: NSObjectProtocol {

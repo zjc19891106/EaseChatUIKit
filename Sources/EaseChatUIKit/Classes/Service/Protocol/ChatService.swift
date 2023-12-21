@@ -7,6 +7,19 @@
 
 import Foundation
 
+@objc public enum ChatMessageStatus: UInt {
+    case sending
+    case succeed
+    case failure
+    case delivered
+    case read
+    case edited
+}
+
+let EaseChatUIKit_alert_message = "chatUIKit_alert_message"
+
+let EaseChatUIKit_user_card_message = "userCard"
+
 @objc public protocol ChatService: NSObjectProtocol {
     
     /// Bind message changed listener
@@ -19,18 +32,23 @@ import Foundation
     
     /// Send message to someone.
     /// - Parameters:
-    ///   - to: Other party user id.
-    ///   - body: ``ChatMessageBody``
+    ///   - body: ``ChatMessage``
     ///   - completion: Callback, returns message if successful, returns error if failed
-    func sendMessage(to: String,body: ChatMessageBody,completion: @escaping (ChatError?,ChatMessage?) -> Void)
+    func send(message: ChatMessage,completion: @escaping (ChatError?,ChatMessage?) -> Void)
     
-    /// Send message to the group.
+    /// Edit text message content.
     /// - Parameters:
-    ///   - to: group id.
-    ///   - body: ``ChatMessageBody``
+    ///   - messageId: ID of the message.
+    ///   - text: Replacement king of ``String``.
     ///   - completion: Callback, returns message if successful, returns error if failed
-    func sendGroupMessage(to: String,body: ChatMessageBody,completion: @escaping (ChatError?,ChatMessage?) -> Void)
+    func edit(messageId: String,text: String,completion: @escaping (ChatError?,ChatMessage?) -> Void)
     
+    /// Recall a message succeed.
+    /// - Parameters:
+    ///   - messageId: ID of the message.
+    ///   - completion: Callback, returns message if successful, returns error if failed
+    func recall(messageId: String,completion: @escaping (ChatError?) -> Void)
+
     /// Remove a message from database.
     /// - Parameter messageId: The id of the message.
     func removeLocalMessage(messageId: String)
@@ -79,8 +97,9 @@ import Foundation
     /// When status of message changed.
     /// - Parameters:
     ///   - message: ``ChatMessage``
+    ///   - status: ``ChatMessageStatus``
     ///   - error: ``ChatError``
-    func onMessageStatusDidChanged(message: ChatMessage,error: ChatError?)
+    func onMessageStatusDidChanged(message: ChatMessage,status: ChatMessageStatus,error: ChatError?)
     
     /// When status of message attachment changed.
     /// - Parameters:

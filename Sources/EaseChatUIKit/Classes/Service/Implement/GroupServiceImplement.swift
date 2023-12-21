@@ -22,6 +22,13 @@ import UIKit
 }
 
 extension GroupServiceImplement: GroupService {
+    
+    public func fetchGroupInfo(groupId: String, completion: @escaping (ChatGroup?, ChatError?) -> Void) {
+        ChatClient.shared().groupManager?.getGroupSpecificationFromServer(withId: groupId, completion: { group, error in
+            completion(group,error)
+        })
+    }
+    
     public func bindGroupEventsListener(listener: GroupServiceListener) {
         if self.responseDelegates.contains(listener) {
             return
@@ -59,6 +66,12 @@ extension GroupServiceImplement: GroupService {
         })
     }
     
+    public func transfer(groupId: String, userId: String, completion: @escaping (ChatGroup?, ChatError?) -> Void) {
+        ChatClient.shared().groupManager?.updateGroupOwner(groupId, newOwner: userId, completion: { group, error in
+            completion(group,error)
+        })
+    }
+    
     public func addAdmin(userId: String, to groupId: String, completion: @escaping (ChatGroup?, ChatError?) -> Void) {
         ChatClient.shared().groupManager?.addAdmin(userId, toGroup: groupId, completion: { group, error in
             completion(group,error)
@@ -89,10 +102,27 @@ extension GroupServiceImplement: GroupService {
         })
     }
     
-    public func update(announcement: String, groupId: String, completion: @escaping (ChatGroup?, ChatError?) -> Void) {
-        ChatClient.shared().groupManager?.updateGroupAnnouncement(withId: groupId, announcement: announcement,completion: { group, error in
-            completion(group,error)
-        })
+    public func update(type: GroupInfoEditType,content: String, groupId: String, completion: @escaping (ChatGroup?, ChatError?) -> Void) {
+        switch type {
+        case .name:
+            ChatClient.shared().groupManager?.updateGroupSubject(content, forGroup: groupId, completion: { group, error in
+                completion(group,error)
+            })
+        case .alias:
+            ChatClient.shared().groupManager?.setMemberAttribute(groupId, userId: ChatClient.shared().currentUsername ?? "", attributes: ["nickName" : content],completion: { error in
+                completion(nil,error)
+            })
+        case .description:
+            ChatClient.shared().groupManager?.updateDescription(content, forGroup: groupId, completion: { group, error in
+                completion(group,error)
+            })
+        case .announcement:
+            ChatClient.shared().groupManager?.updateGroupAnnouncement(withId: groupId, announcement: content,completion: { group, error in
+                completion(group,error)
+            })
+        default:
+            break
+        }
     }
     
     public func update(ext: String, groupId: String, completion: @escaping (ChatGroup?, ChatError?) -> Void) {
@@ -143,7 +173,23 @@ extension GroupServiceImplement: GroupService {
         })
     }
     
+    public func fetchParticipants(groupId: String, cursor: String, pageSize: UInt, completion: @escaping (CursorResult<NSString>?, ChatError?) -> Void) {
+        ChatClient.shared().groupManager?.getGroupMemberListFromServer(withId: groupId, cursor: cursor, pageSize: Int(pageSize), completion: { result, error in
+            completion(result,error)
+        })
+    }
     
+    public func disband(groupId: String, completion: @escaping (ChatError?) -> Void) {
+        ChatClient.shared().groupManager?.destroyGroup(groupId, finishCompletion: { error in
+            completion(error)
+        })
+    }
+    
+    public func leave(groupId: String, completion: @escaping (ChatError?) -> Void) {
+        ChatClient.shared().groupManager?.leaveGroup(groupId, completion: { error in
+            completion(error)
+        })
+    }
 }
 
 extension GroupServiceImplement: GroupEventsListener {

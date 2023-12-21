@@ -38,7 +38,7 @@ import UIKit
 @objc open class ContactListHeaderCell: UITableViewCell {
     
     public private(set) lazy var badge: UILabel = {
-        UILabel(frame: CGRect(x: 0, y: 0, width: 32, height: 18)).cornerRadius(.large).font(UIFont.theme.bodySmall)
+        UILabel(frame: CGRect(x: ScreenWidth-70, y: self.contentView.frame.height/2.0-9, width: 32, height: 18)).cornerRadius(.large).font(UIFont.theme.bodySmall)
     }()
         
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -48,7 +48,13 @@ import UIKit
         self.imageView?.contentMode = .scaleAspectFit
         self.textLabel?.font = UIFont.theme.labelMedium
         self.textLabel?.textColor = UIColor.theme.neutralColor1
+        self.contentView.addSubview(self.badge)
 //        self.accessoryView = self.badge
+    }
+    
+    open override func layoutSubviews() {
+        super.layoutSubviews()
+        self.badge.frame = CGRect(x: ScreenWidth-70, y: self.contentView.frame.height/2.0-9, width: 32, height: 18)
     }
     
     /// Refresh cell on needed.
@@ -64,7 +70,7 @@ import UIKit
         if item.numberCount > 0 {
             self.badge.text = "\(item.numberCount)"
         }
-        self.accessoryView?.isHidden = !item.showNumber
+        self.badge.isHidden = !item.showNumber
     }
     
     required public init?(coder: NSCoder) {

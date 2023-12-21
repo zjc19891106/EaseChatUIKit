@@ -12,21 +12,6 @@ import Foundation
     case offline
 }
 
-
-@objc public protocol UserInfoProtocol: NSObjectProtocol {
-    
-    /// Your application's userId register for chat.
-    var userId: String { set get }
-    
-    /// User's nickname
-    var nickName: String { set get }
-    
-    /// User's avatar url
-    var avatarURL: String { set get }
-    
-    func toJsonObject() -> Dictionary<String,Any>?
-}
-
 @objc public protocol UserServiceProtocol: NSObjectProtocol {
     
     /// Bind user state changed listener
@@ -41,19 +26,19 @@ import Foundation
     /// - Parameters:
     ///   - userId: userId
     ///   - completion: completion
-    func userInfo(userId: String, completion: @escaping (UserInfoProtocol?,ChatError?) -> Void)
+    func userInfo(userId: String, completion: @escaping (EaseProfileProtocol?,ChatError?) -> Void)
     
     /// Get user info by userIds.The frequency of api usage for free users is 100 times in 1 second.Upgrading the package can increase the usage.
     /// - Parameters:
     ///   - userIds: userIds
     ///   - completion: completion
-    func userInfos(userIds: [String], completion: @escaping ([UserInfoProtocol],ChatError?) -> Void)
+    func userInfos(userIds: [String], completion: @escaping ([EaseProfileProtocol],ChatError?) -> Void)
     
     /// Update user info.The frequency of api usage for free users is 100 times in 1 second.Upgrading the package can increase the usage.
     /// - Parameters:
-    ///   - userInfo: UserInfoProtocol
+    ///   - userInfo: EaseProfileProtocol
     ///   - completion: 
-    func updateUserInfo(userInfo: UserInfoProtocol, completion: @escaping (Bool,ChatError?) -> Void)
+    func updateUserInfo(userInfo: EaseProfileProtocol, completion: @escaping (Bool,ChatError?) -> Void)
     
     /// Login SDK
     /// - Parameters:

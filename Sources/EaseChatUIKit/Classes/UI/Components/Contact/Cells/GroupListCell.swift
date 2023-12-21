@@ -34,10 +34,10 @@ import UIKit
         self.nickName.center = CGPoint(x: self.nickName.center.x, y: self.contentView.center.y)
     }
     
-    func refresh(info: ChatGroup,keyword: String) {
-        let nickName = info.groupName.isEmpty ? info.groupId:info.groupName
+    func refresh(info: EaseProfileProtocol,keyword: String) {
+        let nickName = info.nickName.isEmpty ? info.id:info.nickName
         self.nickName.attributedText = self.highlightKeywords(keyword: keyword, in: nickName ?? "")
-        self.avatar.image(with: "", placeHolder: Appearance.Conversation.groupPlaceHolder)
+        self.avatar.image(with: info.avatarURL, placeHolder: Appearance.conversation.groupPlaceHolder)
     }
     
     func highlightKeywords(keyword: String, in string: String) -> NSAttributedString {

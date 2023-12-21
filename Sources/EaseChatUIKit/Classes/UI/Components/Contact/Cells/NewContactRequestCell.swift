@@ -19,7 +19,7 @@ import UIKit
     public var agreeClosure: ((String) -> Void)?
     
     lazy var avatar: UIImageView = {
-        UIImageView(frame: CGRect(x: 16, y: (self.contentView.frame.height-50)/2.0, width: 50, height: 50)).cornerRadius(Appearance.avatarRadius).image(Appearance.avatarPlaceHolder)
+        UIImageView(frame: CGRect(x: 16, y: (self.contentView.frame.height-40)/2.0, width: 40, height: 40)).cornerRadius(Appearance.avatarRadius).image(Appearance.avatarPlaceHolder)
     }()
     
     lazy var nickName: UILabel = {
@@ -35,7 +35,7 @@ import UIKit
     }()
     
     lazy var add: UIButton = {
-        UIButton(type: .custom).frame(CGRect(x: self.contentView.frame.width-76, y: self.nickName.frame.minY+2, width: 72, height: 28)).cornerRadius(.small).title("Add".chat.localize, .normal).font(UIFont.theme.labelMedium).addTargetFor(self, action: #selector(addFriend), for: .touchUpInside)
+        UIButton(type: .custom).frame(CGRect(x: self.contentView.frame.width-76, y: self.nickName.frame.minY+2, width: 72, height: 28)).cornerRadius(.small).title("Add".chat.localize, .normal).textColor(UIColor.theme.neutralColor98, .normal).font(UIFont.theme.labelMedium).addTargetFor(self, action: #selector(addFriend), for: .touchUpInside)
     }()
 
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -51,8 +51,8 @@ import UIKit
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        self.avatar.frame = CGRect(x: 16, y: (self.contentView.frame.height-50)/2.0, width: 50, height: 50)
-        self.nickName.frame =  CGRect(x: self.avatar.frame.maxX+12, y: self.avatar.frame.minX+4, width: self.contentView.frame.width-self.avatar.frame.maxX-12-76, height: 16)
+        self.avatar.frame = CGRect(x: 16, y: (self.contentView.frame.height-40)/2.0, width: 40, height: 40)
+        self.nickName.frame =  CGRect(x: self.avatar.frame.maxX+12, y: self.avatar.frame.minX, width: self.contentView.frame.width-self.avatar.frame.maxX-12-76, height: 16)
         self.content.frame = CGRect(x: self.avatar.frame.maxX+12, y: self.nickName.frame.maxY+2, width: self.contentView.frame.width-self.avatar.frame.maxX-12-76, height: 16)
         self.add.frame = CGRect(x: self.contentView.frame.width-76, y: self.nickName.frame.minY+2, width: 72, height: 28)
     }
@@ -73,7 +73,6 @@ extension NewContactRequestCell: ThemeSwitchProtocol {
         self.nickName.textColor = style == .dark ? UIColor.theme.neutralColor98:UIColor.theme.neutralColor1
         self.content.textColor = style == .dark ? UIColor.theme.neutralColor6:UIColor.theme.neutralColor5
         self.date.textColor = style == .dark ? UIColor.theme.neutralColor6:UIColor.theme.neutralColor5
-        self.add.setTitleColor(style == .dark ? UIColor.theme.neutralColor6:UIColor.theme.neutralColor5, for: .normal)
         self.add.backgroundColor = style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5
     }
     

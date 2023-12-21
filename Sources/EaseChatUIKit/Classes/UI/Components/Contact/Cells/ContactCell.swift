@@ -40,6 +40,7 @@ import UIKit
     }
     
     @objc public func refresh(profile: EaseProfileProtocol) {
+        self.avatar.cornerRadius(Appearance.avatarRadius)
         self.avatar.image(with: profile.avatarURL, placeHolder: Appearance.avatarPlaceHolder)
         self.nickName.text = profile.nickName.isEmpty ? profile.id:profile.nickName
         if self.display == .withCheckBox,let item = profile as? EaseProfile {
@@ -47,10 +48,13 @@ import UIKit
         }
     }
     
-    func refresh(profile: EaseProfileProtocol,keyword: String) {
+    @objc public func refresh(profile: EaseProfileProtocol,keyword: String) {
         let nickName = profile.nickName.isEmpty ? profile.id:profile.nickName
         self.nickName.attributedText = self.highlightKeywords(keyword: keyword, in: nickName)
-        self.avatar.image(with: profile.avatarURL, placeHolder: profile.type == .chat ? Appearance.Conversation.singlePlaceHolder:Appearance.Conversation.groupPlaceHolder)
+        self.avatar.image(with: profile.avatarURL, placeHolder: profile.type == .chat ? Appearance.conversation.singlePlaceHolder:Appearance.conversation.groupPlaceHolder)
+        if self.display == .withCheckBox,let item = profile as? EaseProfile {
+            self.checkbox.image = UIImage(named: item.selected ? "select":"unselect", in: .chatBundle, compatibleWith: nil)
+        }
     }
     
     func highlightKeywords(keyword: String, in string: String) -> NSAttributedString {

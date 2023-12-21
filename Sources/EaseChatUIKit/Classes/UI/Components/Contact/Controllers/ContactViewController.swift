@@ -1,94 +1,79 @@
 import UIKit
 
-@objc open class ContactViewController: UIViewController, UISearchResultsUpdating, UISearchControllerDelegate {
-    public func updateSearchResults(for searchController: UISearchController) {
-        
-    }
+@objcMembers open class ContactViewController: UIViewController {
     
+    public var confirmClosure: (([EaseProfileProtocol]) -> ())?
     
     public private(set) var style = ContactListHeaderStyle.contact
     
-    public lazy var searchContainer: ContactSearchResultController = {
-        ContactSearchResultController(headerStyle: self.style) { [weak self] profile in
-            self?.contactList.refreshProfiles(infos: [profile])
+    public private(set) lazy var navigation: EaseChatNavigationBar = {
+        if self.style == .newGroup || self.style == .addGroupParticipant || self.style == .shareContact || self.style == .transferOwner {
+            return EaseChatNavigationBar(frame: (self.style == .newGroup || self.style == .newChat) ? CGRect(x: 0, y: 0, width: ScreenWidth, height: 44):CGRect(x: 0, y: 0, width: ScreenWidth, height: NavigationHeight),textAlignment: .left,rightTitle: "").backgroundColor(.clear)
+        } else {
+            return EaseChatNavigationBar(frame: (self.style == .newGroup || self.style == .newChat) ? CGRect(x: 0, y: 0, width: ScreenWidth, height: 44):CGRect(x: 0, y: 0, width: ScreenWidth, height: NavigationHeight),showLeftItem: self.style != .contact, rightImages: self.style == .newChat ? []:[UIImage(named: "person_add", in: .chatBundle, with: nil)!],hiddenAvatar: self.style == .contact ? false:true).backgroundColor(.clear)
         }
     }()
     
-    public private(set) lazy var searchController: UISearchController = {
-        let searchController = UISearchController(searchResultsController: self.searchContainer)
-        searchController.searchResultsUpdater = self.searchContainer
-        searchController.delegate = self.searchContainer
-        searchController.hidesNavigationBarDuringPresentation = true
-        searchController.obscuresBackgroundDuringPresentation = false
-        searchController.automaticallyShowsSearchResultsController = true
-        searchController.showsSearchResultsController = true
-        searchController.automaticallyShowsScopeBar = false
-        searchController.searchBar.placeholder = " Search".chat.localize
-        searchController.searchBar.backgroundImage = UIImage()
-        searchController.searchBar.frame = CGRect(x: 0, y: (self.style == .contact ? self.navigation.frame.maxY:10) + 5, width: self.view.frame.width, height: 44)
-//        self.definesPresentationContext = true
-        return searchController
-    }()
-    
-    public private(set) lazy var navigation: EaseChatNavigationBar = {
-        EaseChatNavigationBar(showLeftItem: true,rightImages: [UIImage(named: "person_add", in: .chatBundle, with: nil)!]).backgroundColor(.white)
-    }()
-    
     public private(set) lazy var search: UIButton = {
-        UIButton(type: .custom).frame(CGRect(x: 16, y: (self.style == .contact ? self.navigation.frame.maxY:10) + 5, width: self.view.frame.width-32, height: 44)).backgroundColor(UIColor.theme.neutralColor95).textColor(UIColor.theme.neutralColor6, .normal).cornerRadius(.large).title(" Search".chat.localize, .normal).image(UIImage(named: "search", in: .chatBundle, with: nil), .normal).addTargetFor(self, action: #selector(searchAction), for: .touchUpInside)
+        UIButton(type: .custom).frame(CGRect(x: 16, y: self.navigation.frame.maxY + 5, width: self.view.frame.width-32, height: 44)).backgroundColor(UIColor.theme.neutralColor95).textColor(UIColor.theme.neutralColor6, .normal).title(" Search".chat.localize, .normal).image(UIImage(named: "search", in: .chatBundle, with: nil), .normal).addTargetFor(self, action: #selector(searchAction), for: .touchUpInside).cornerRadius(Appearance.avatarRadius)
     }()
     
-    public private(set) lazy var contactList: ContactList = {
-        ContactList(frame: CGRect(x: 0, y: self.search.frame.maxY, width: self.view.frame.width, height: self.view.frame.height-self.search.frame.maxY-BottomBarHeight), style: .grouped,headerStyle: self.style).backgroundColor(.clear)
+    public private(set) lazy var contactList: ContactView = {
+        ContactView(frame: CGRect(x: 0, y: self.search.frame.maxY, width: self.view.frame.width, height: self.view.frame.height-self.search.frame.maxY-(self.tabBarController?.tabBar.frame.height ?? 0)),headerStyle: self.style).backgroundColor(.clear)
     }()
-        
-    public private(set) lazy var indexIndicator: SectionIndexList = {
-        SectionIndexList(frame: CGRect(x: self.view.frame.width-16, y: self.search.frame.maxY+CGFloat(Appearance.Contact.headerExtensionActions.count)*Appearance.Contact.rowHeight+20, width: 16, height: 0), style: .plain).backgroundColor(.clear)
-    }()
-    
+            
     public private(set) var viewModel: ContactViewModel = ContactViewModel()
     
     /// ``ContactListController`` init method.Only available in Objective-C language.
     /// - Parameters:
     ///   - headerStyle: ``ContactListHeaderStyle``
     ///   - providerOC: The object of conform ``EaseProfileProviderOC``.
-    @objc public required convenience init(headerStyle: ContactListHeaderStyle = .contact,providerOC: EaseProfileProviderOC? = nil) {
+    ///   - ignoreIds: Array of contact ids that already exist in the group.
+    @objc public required convenience init(headerStyle: ContactListHeaderStyle = .contact,providerOC: EaseProfileProviderOC? = nil,ignoreIds: [String] = []) {
         self.init()
         self.style = headerStyle
-        self.viewModel = ContactViewModel(providerOC: providerOC)
+        self.viewModel = ContactViewModel(providerOC: providerOC,ignoreIds: ignoreIds)
     }
     
     /// ``ContactListController`` init method.Only available in Swift language.
     /// - Parameters:
     ///   - headerStyle: ``ContactListHeaderStyle``.
     ///   - provider: The object of conform ``EaseProfileProvider``.
-    public required convenience init(headerStyle: ContactListHeaderStyle = .contact,provider: EaseProfileProvider? = nil) {
+    ///   - ignoreIds: Array of contact ids that already exist in the group.   
+    public required convenience init(headerStyle: ContactListHeaderStyle = .contact,provider: EaseProfileProvider? = nil,ignoreIds: [String] = []) {
         self.init()
         self.style = headerStyle
-        self.viewModel = ContactViewModel(provider: provider)
+        self.viewModel = ContactViewModel(provider: provider,ignoreIds: ignoreIds)
+    }
+    
+    open override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+    
+    open override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        if self.style == .newGroup || self.style == .addGroupParticipant || self.style == .shareContact  || self.style == .transferOwner {
+            self.tabBarController?.tabBar.isHidden = true
+        } else {
+            self.tabBarController?.tabBar.isHidden = false
+        }
+    }
+    
+    open override func viewDidAppear(_ animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
     }
     
     open override func viewDidLoad() {
         super.viewDidLoad()
-        if self.style == .contact {
-            self.view.addSubViews([self.navigation,self.searchController.searchBar,self.contactList,self.indexIndicator])
-        } else {
-            self.view.addSubViews([self.searchController.searchBar,self.contactList,self.indexIndicator])
-        }
-        self.viewModel.bind(driver: self.contactList,indexDriver: self.indexIndicator)
-        self.navigation.title = "Contact".chat.localize
-        
-        self.indexIndicator.selectClosure = { [weak self] in
-            self?.contactList.scrollToRow(at: IndexPath(row: 0, section: $0.row), at: .middle, animated: true)
-        }
-        
-        //Back button click of the navigation
-        self.navigation.leftItemClick = { [weak self] in
-            self?.pop()
-        }
-        //Right buttons click of the navigation
-        self.navigation.rightItemsClick = { [weak self] in
-            self?.rightActions(indexPath: $0)
+        self.view.addSubViews([self.navigation,self.search,self.contactList])
+        self.viewModel.bind(driver: self.contactList)
+        self.setupTitle()
+    
+        //Click of the navigation
+        self.navigation.clickClosure = { [weak self] in
+            self?.navigationClick(type: $0, indexPath: $1)
         }
         //Push to ContactInfoViewController
         self.viewModel.viewContact = { [weak self] in
@@ -104,13 +89,47 @@ import UIKit
         
     }
     
+    private func navigationClick(type: EaseChatNavigationBarClickEvent,indexPath: IndexPath?) {
+        switch type {
+        case .back: self.pop()
+        case .rightTitle: self.confirmAction()
+        case .rightItems: self.rightActions(indexPath: indexPath ?? IndexPath())
+        default:
+            break
+        }
+    }
+    
+    private func setupTitle() {
+        var text = ""
+        switch self.style {
+        case .newGroup:
+            text = "new_chat_button_click_menu_creategroup".chat.localize
+            self.navigation.rightItem.title("Create".chat.localize, .normal)
+        case .newChat:
+            text = "New Message".chat.localize
+        case .contact:
+            text = "Contact".chat.localize
+        case .shareContact:
+            text = "Share Contact".chat.localize
+        case .transferOwner:
+            text = "group_details_extend_button_transfer".chat.localize
+        case .addGroupParticipant:
+            text = "add_group_members".chat.localize
+            self.navigation.rightItem.title("Add".chat.localize, .normal)
+        default:
+            break
+        }
+        self.navigation.rightItem.isEnabled = false
+        self.navigation.title = text
+    }
+    
     private func receiveContactHeaderAction() {
-        if let item = Appearance.Contact.headerExtensionActions.first(where: { $0.featureIdentify == "NewFriendRequest" }) {
+        if let item = Appearance.contact.headerExtensionActions.first(where: { $0.featureIdentify == "NewFriendRequest" }) {
             item.actionClosure = { [weak self] _ in
                 self?.viewNewFriendRequest()
             }
         }
-        if let item = Appearance.Contact.headerExtensionActions.first(where: { $0.featureIdentify == "GroupChats" }) {
+        if let item = Appearance.contact.headerExtensionActions.first(where: { $0.featureIdentify == "GroupChats" }) {
             item.actionClosure = { [weak self] _ in
                 self?.viewJoinedGroups()
             }
@@ -118,11 +137,14 @@ import UIKit
     }
     
     @objc private func searchAction() {
-//        if self.navigationController != nil {
-//            self.navigationController?.pushViewController(SearchConversationsController(searchInfos: self.conversationList.datas), animated: true)
-//        } else {
-//            self.navigationController?.present(SearchConversationsController(searchInfos: self.conversationList.datas), animated: true)
-//        }
+        var vc: ContactSearchResultController?
+        vc = ContactSearchResultController(headerStyle: self.style) { [weak self] item in
+            vc?.navigationController?.popViewController(animated: false)
+            self?.viewContact(profile: item)
+        }
+        if let vc = vc {
+            self.navigationController?.pushViewController(vc, animated: true)
+        }
     }
     
     private func rightActions(indexPath: IndexPath) {
@@ -138,25 +160,50 @@ import UIKit
                                         "add_contacts_subtitle".chat.localize, showCancel: true, showConfirm: true,showTextFiled: true,placeHolder: "contactID".chat.localize) { [weak self] text in
             self?.viewModel.service?.addContact(userId: text, invitation: "", completion: { error, userId in
                 if let error = error {
-                    consoleLogInfo("add contact error:\(error.errorDescription)", type: .error)
+                    consoleLogInfo("add contact error:\(error.errorDescription ?? "")", type: .error)
                 }
             })
         }
     }
     
-    @objc private func viewContact(profile: EaseProfileProtocol) {
-        if self.style == .newGroup {
-            self.dismiss(animated: true) {
-                UIViewController.currentController?.navigationController?.pushViewController(MessageListController(), animated: true)
+    private func confirmAction() {
+        var choices = [EaseProfileProtocol]()
+        for contacts in self.contactList.contacts {
+            for contact in contacts {
+                if contact.selected {
+                    choices.append(contact)
+                }
             }
-        } else {
+        }
+        self.confirmClosure?(choices)
+    }
+    
+    @objc private func viewContact(profile: EaseProfileProtocol) {
+        switch self.style {
+        case .newChat:
+            self.confirmClosure?([profile])
+        case .contact:
             let vc = ContactInfoViewController(profile: profile)
             ControllerStack.toDestination(vc: vc)
+        case .shareContact:
+            self.confirmClosure?([profile])
+        case .addGroupParticipant,.newGroup:
+            let count = self.contactList.rawData.filter { $0.selected }.count
+            self.navigation.rightItem.isEnabled = count > 0
+            var title = self.style == .newGroup ? "new_chat_button_click_menu_creategroup".chat.localize:"Add".chat.localize
+            if count > 0 {
+                title += "(\(count))"
+            }
+            self.navigation.rightItem.setTitle(title, for: .normal)
+        case .transferOwner:
+            self.confirmClosure?([profile])
+        default:
+            break
         }
     }
     
     private func viewNewFriendRequest() {
-        let vc = NewContactRequestViewController()
+        let vc = NewContactRequestController()
         ControllerStack.toDestination(vc: vc)
     }
     
@@ -179,11 +226,10 @@ extension ContactViewController: ThemeSwitchProtocol {
         self.view.backgroundColor = style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98
         self.search.backgroundColor = style == .dark ? UIColor.theme.neutralColor2:UIColor.theme.neutralColor95
         self.navigation.backgroundColor = style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98
-        self.indexIndicator.backgroundColor = .clear
-        self.indexIndicator.backgroundView = nil
-        self.searchController.searchBar.backgroundColor(style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98)
-        self.searchController.searchBar.barStyle = style == .dark ? .black:.default
-
+        
+        
+        self.navigation.rightItem.textColor(style == .dark ? UIColor.theme.neutralColor3:UIColor.theme.neutralColor7, .disabled)
+        self.navigation.rightItem.textColor(style == .dark ? UIColor.theme.primaryColor6:UIColor.theme.primaryColor5, .normal)
     }
     
 }

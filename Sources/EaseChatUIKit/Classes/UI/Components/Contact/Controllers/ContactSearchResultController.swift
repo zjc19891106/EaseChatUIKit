@@ -19,7 +19,20 @@ import UIKit
     
     public private(set) var searchResults = [EaseProfileProtocol]()
     
-    public private(set) var searchController = UISearchController()
+    public private(set) lazy var searchController: UISearchController = {
+        let searchController = UISearchController(searchResultsController: nil)
+        searchController.searchResultsUpdater = self
+        searchController.delegate = self
+        searchController.searchBar.showsCancelButton = true
+        searchController.hidesNavigationBarDuringPresentation = true
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.automaticallyShowsSearchResultsController = true
+        searchController.showsSearchResultsController = true
+        searchController.automaticallyShowsScopeBar = false
+        searchController.searchBar.backgroundImage = UIImage()
+        searchController.searchBar.delegate = self
+        return searchController
+    }()
     
     public private(set) var headerStyle = ContactListHeaderStyle.contact
     
@@ -48,13 +61,13 @@ import UIKit
     open override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
         self.navigationController?.navigationBar.isHidden = true
+        self.tabBarController?.tabBar.isHidden = true
         
     }
     
     open override func viewDidLoad() {
         super.viewDidLoad()
-        self.tableView.tableFooterView(UIView()).rowHeight(Appearance.Contact.rowHeight)
-//        self.tableView.contentOffset = CGPoint(x: 0, y: 0)
+        self.tableView.tableFooterView(UIView()).rowHeight(Appearance.contact.rowHeight).tableHeaderView(self.searchController.searchBar)
         self.tableView.keyboardDismissMode = .onDrag
         self.loadAllContacts()
         Theme.registerSwitchThemeViews(view: self)
@@ -100,7 +113,7 @@ import UIKit
     open override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var cell = tableView.dequeueReusableCell(with: ComponentsRegister.shared.ContactsCell.self, reuseIdentifier: "EaseUIKit_ContactsCell_Search")
         if cell == nil {
-            cell = ComponentsRegister.shared.ContactsCell.init(displayStyle: self.headerStyle == .newGroup ? .withCheckBox:.normal,identifier: "EaseUIKit_ContactsCell_Search")
+            cell = ComponentsRegister.shared.ContactsCell.init(displayStyle: (self.headerStyle == .newGroup || self.headerStyle == .addGroupParticipant) ? .withCheckBox:.normal,identifier: "EaseUIKit_ContactsCell_Search")
         }
         if let item = self.searchResults[safe: indexPath.row] {
             cell?.refresh(profile: item,keyword: self.searchKeyWord)
@@ -120,7 +133,7 @@ import UIKit
     }
 }
 
-extension ContactSearchResultController: UISearchResultsUpdating,UISearchControllerDelegate  {
+extension ContactSearchResultController: UISearchResultsUpdating,UISearchControllerDelegate,UISearchBarDelegate {
 
     public func updateSearchResults(for searchController: UISearchController) {
         searchController.searchResultsController?.view.isHidden = false
@@ -153,7 +166,13 @@ extension ContactSearchResultController: UISearchResultsUpdating,UISearchControl
         
     }
     
-    
+    public func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        if self.navigationController != nil {
+            self.navigationController?.popViewController(animated: true)
+        } else {
+            self.dismiss(animated: true)
+        }
+    }
 }
 
 extension ContactSearchResultController: ThemeSwitchProtocol {

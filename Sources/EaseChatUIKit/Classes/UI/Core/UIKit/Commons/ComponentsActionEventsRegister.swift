@@ -26,5 +26,16 @@ import UIKit
         static public var groupWithSelected: ((IndexPath,EaseProfileProtocol) -> Void)?
     }
                 
-    
+    @objcMembers public class Chat: NSObject {
+        
+        static public var replyClicked: ((MessageEntity) -> Void)?
+        
+        static public var bubbleClicked: ((MessageEntity) -> Void)?
+        
+        static public var bubbleLongPressed: ((MessageEntity) -> Void)?
+        
+        static public var avatarClicked: ((EaseProfileProtocol) -> Void)?
+        
+        static public var avatarLongPressed: ((EaseProfileProtocol) -> Void)?
+    }
 }

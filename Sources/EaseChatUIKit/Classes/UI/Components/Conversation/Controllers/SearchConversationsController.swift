@@ -45,12 +45,14 @@ import UIKit
     
     private var searchText = ""
     
+    private var chatClosure: ((ConversationInfo) -> Void)?
+    
     lazy var searchHeader: SearchHeaderBar = {
         SearchHeaderBar(frame: CGRect(x: 0, y: StatusBarHeight+10, width: ScreenWidth, height: 44), displayStyle: .withBack).backgroundColor(.clear)
     }()
     
     lazy var searchList: UITableView = {
-        UITableView(frame: CGRect(x: 0, y: self.searchHeader.frame.maxY+10, width: self.view.frame.width, height: self.view.frame.height-self.searchHeader.frame.maxY-BottomBarHeight-10), style: .plain).delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).rowHeight(Appearance.Conversation.rowHeight).backgroundColor(.clear)
+        UITableView(frame: CGRect(x: 0, y: self.searchHeader.frame.maxY+10, width: self.view.frame.width, height: self.view.frame.height-self.searchHeader.frame.maxY-BottomBarHeight-10), style: .plain).delegate(self).dataSource(self).tableFooterView(UIView()).separatorStyle(.none).rowHeight(Appearance.conversation.rowHeight).backgroundColor(.clear)
     }()
     
     public private(set) lazy var empty: EmptyStateView = {
@@ -59,9 +61,15 @@ import UIKit
         }
     }()
     
-    @objc public required convenience init(searchInfos: [ConversationInfo]) {
+    @objc public required convenience init(searchInfos: [ConversationInfo],toChat: @escaping (ConversationInfo) -> Void) {
         self.init()
         self.datas = searchInfos
+        self.chatClosure = toChat
+    }
+    
+    open override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.tabBarController?.tabBar.isHidden = true
     }
 
     open override func viewDidLoad() {
@@ -72,8 +80,8 @@ import UIKit
         Theme.registerSwitchThemeViews(view: self)
         self.searchHeader.textChanged = { [weak self] in
             guard let `self` = self else { return }
-            self.searchText = $0
-            self.searchResults = self.datas.filter({ $0.nickName.contains(self.searchText) })
+            self.searchText = $0.lowercased()
+            self.searchResults = self.datas.filter({ $0.nickName.lowercased().contains(self.searchText) || $0.id.lowercased().contains(self.searchText) })
             self.searchList.reloadData()
         }
         self.searchHeader.textFieldState = { [weak self] in
@@ -120,9 +128,22 @@ extension SearchConversationsController: UITableViewDelegate,UITableViewDataSour
                 cell?.refresh(info: info, keyword: self.searchText)
             }
         }
+        cell?.selectionStyle = .none
         return cell ?? UITableViewCell()
     }
     
+    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        if self.active {
+            if let info = self.searchResults[safe: indexPath.row] {
+                self.chatClosure?(info)
+            }
+        } else {
+            if let info = self.datas[safe: indexPath.row] {
+                self.chatClosure?(info)
+            }
+        }
+    }
     
 }
 

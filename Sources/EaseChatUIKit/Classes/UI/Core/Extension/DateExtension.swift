@@ -73,4 +73,8 @@ public extension ChatWrapper where Base == Date {
     func compareDays() -> Int {
         Calendar.current.dateComponents([.day], from: Date(),to: base).day ?? 0
     }
+    
+    func compareYears() -> Int {
+        Calendar.current.dateComponents([.year], from: Date(),to: base).day ?? 0
+    }
 }

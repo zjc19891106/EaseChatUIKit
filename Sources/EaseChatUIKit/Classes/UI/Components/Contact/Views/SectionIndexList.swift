@@ -30,10 +30,9 @@ import UIKit
         self.delegate = self
         self.dataSource = self
         self.separatorStyle = .none
-        self.tableFooterView = UIView()
+        self.tableFooterView = UIView().backgroundColor(.clear)
         self.isScrollEnabled = false
         self.showsVerticalScrollIndicator = false
-        self.backgroundColor = .clear
         self.backgroundView = nil
         Theme.registerSwitchThemeViews(view: self)
     }
@@ -79,6 +78,7 @@ extension SectionIndexList: UITableViewDelegate,UITableViewDataSource {
         } else {
             cell?.textLabel?.textColor = UIColor.theme.neutralColor98
         }
+        cell?.backgroundColor = .clear
         return cell ?? UITableViewCell()
     }
     
