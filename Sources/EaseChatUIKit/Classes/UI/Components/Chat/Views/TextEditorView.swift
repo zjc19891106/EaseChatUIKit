@@ -54,14 +54,14 @@ open class TextEditorView: UIView {
     }
 
     /// 占位 text 行数
-    public var placeholderNumberOfLines: UInt = 1 {
+    public var placeholderNumberOfLines: UInt = 0 {
         didSet {
             placeholderLabel.numberOfLines = Int(placeholderNumberOfLines)
         }
     }
 
     /// 输入范围最小高度， 注意: 表示实际 textView 文本高度。
-    public var minHeight: CGFloat = 17
+    public var minHeight: CGFloat = 32
     /// 最长文本数量，默认值为nil,表示不受限制但同时会影藏数量 label
     public var maxTextCount: UInt? {
         didSet {
@@ -182,8 +182,9 @@ private extension TextEditorView {
         textView.textContainerInset = .zero // 去除默认上下 8 距离
         textView.textContainer.lineFragmentPadding = 0 // 去掉 默认5
         textView.showsVerticalScrollIndicator = false
+        textView.autoresizingMask = .flexibleHeight
         textView.showsHorizontalScrollIndicator = false
-        textView.isScrollEnabled = false
+        textView.isScrollEnabled = true
         textView.delegate = self
         addSubview(textView)
         textView.translatesAutoresizingMaskIntoConstraints = false
@@ -241,7 +242,7 @@ private extension TextEditorView {
     }
 
     func textSize() -> CGSize {
-        let rect = textView.attributedText.boundingRect(with: textView.contentSize, options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
+        let rect = textView.attributedText.boundingRect(with: CGSize(width: ScreenWidth-66, height: Appearance.chat.maxInputHeight), options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
         return rect.size
     }
 
@@ -254,6 +255,7 @@ private extension TextEditorView {
         textDidChanged(newText)
         let height = intrinsicContentSize.height
         let isScroll = heightDidChangedShouldScroll(height)
+        
         textView.isScrollEnabled = isScroll
         textView.showsVerticalScrollIndicator = isScroll
     }

@@ -43,22 +43,22 @@ import UIKit
         self.statusView.leftAnchor.constraint(equalTo: self.leftAnchor).isActive = true
         self.statusView.rightAnchor.constraint(equalTo: self.rightAnchor).isActive = true
         self.statusView.heightAnchor.constraint(equalToConstant: 30).isActive = true
-        
+        self.editor.cornerRadius(.small)
         self.editor.textView.text = content
         self.editor.placeholderFont = .systemFont(ofSize: 14, weight: .regular)
         self.editor.textView.font = .systemFont(ofSize: 14, weight: .medium)
         
-        let contentHeight = content.chat.sizeWithText(font: UIFont.systemFont(ofSize: 14, weight: .medium), size: CGSize(width: self.frame.width-16, height: ScreenHeight/2.0)).height+CGFloat(BottomBarHeight)+CGFloat(46)
-        if contentHeight > 154 {
-            let containerY = ScreenHeight-contentHeight
-            self.frame = CGRect(x: 0, y: containerY, width: self.frame.width, height: contentHeight)
+        let contentHeight = content.chat.sizeWithText(font: UIFont.systemFont(ofSize: 14, weight: .medium), size: CGSize(width: ScreenWidth-66, height: Appearance.chat.maxInputHeight)).height+CGFloat(BottomBarHeight)+CGFloat(46)
+        if contentHeight > Appearance.chat.maxInputHeight+46+CGFloat(BottomBarHeight) {
+            let containerY = ScreenHeight-(Appearance.chat.maxInputHeight+46+CGFloat(BottomBarHeight))
+            self.frame = CGRect(x: 0, y: containerY, width: self.frame.width, height: Appearance.chat.maxInputHeight+46+CGFloat(BottomBarHeight))
             self.placeHolderHeight = contentHeight
         }
        
         self.editor.translatesAutoresizingMaskIntoConstraints = false
         self.editor.leftAnchor.constraint(equalTo: self.leftAnchor, constant: 8).isActive = true
         self.editor.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -54).isActive = true
-        self.editor.topAnchor.constraint(equalTo: self.topAnchor, constant: 30).isActive = true
+        self.editor.topAnchor.constraint(equalTo: self.topAnchor, constant: 38).isActive = true
         self.editor.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -CGFloat(BottomBarHeight)-12).isActive = true
         self.normalFrame = self.frame
         self.done.isEnabled = false
@@ -68,15 +68,15 @@ import UIKit
         }
         self.editor.heightDidChangedShouldScroll = { [weak self] in
             guard let `self` = self else { return true }
-            var changeHeight = ($0+46+CGFloat(BottomBarHeight)+20)
-            if changeHeight > ScreenHeight/2.0 {
-                changeHeight = ScreenHeight/2.0
+            var changeHeight = ($0+46+CGFloat(BottomBarHeight))
+            if changeHeight > (Appearance.chat.maxInputHeight+46+CGFloat(BottomBarHeight)) {
+                changeHeight = (Appearance.chat.maxInputHeight+46+CGFloat(BottomBarHeight))
                 self.placeHolderHeight = changeHeight
-                self.frame = CGRect(x: 0, y: ScreenHeight - ($0+46+CGFloat(BottomBarHeight)+20) - self.keyboardHeight, width: self.frame.width, height: changeHeight)
+                self.frame = CGRect(x: 0, y: ScreenHeight - ($0+46+CGFloat(BottomBarHeight)-12) - self.keyboardHeight, width: self.frame.width, height: changeHeight)
                 return true
             } else {
                 self.placeHolderHeight = changeHeight
-                self.frame = CGRect(x: 0, y: ScreenHeight - ($0+46+CGFloat(BottomBarHeight)+20) - self.keyboardHeight, width: self.frame.width, height: changeHeight)
+                self.frame = CGRect(x: 0, y: ScreenHeight - ($0+46+CGFloat(BottomBarHeight)) - self.keyboardHeight, width: self.frame.width, height: changeHeight)
                 return false
             }
         }
@@ -109,7 +109,8 @@ import UIKit
 extension MessageEditor: ThemeSwitchProtocol {
     public func switchTheme(style: ThemeStyle) {
         self.backgroundColor = style == .dark ? UIColor.theme.neutralColor1:UIColor.theme.neutralColor98
-        self.statusView.backgroundColor = style == .dark ? UIColor.theme.neutralColor3:UIColor.theme.neutralColor95
+        self.statusView.backgroundColor = style == .dark ? UIColor.theme.neutralColor2:UIColor.theme.neutralColor95
+        self.editor.backgroundColor = style == .dark ? UIColor.theme.neutralColor2:UIColor.theme.neutralColor95
         self.statusView.textColor(style == .dark ? UIColor.theme.neutralSpecialColor6:UIColor.theme.neutralSpecialColor5, .normal)
         if style == .dark {
             self.statusImage?.withTintColor(UIColor.theme.neutralSpecialColor6)

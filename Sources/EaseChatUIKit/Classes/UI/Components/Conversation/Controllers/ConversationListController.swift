@@ -9,11 +9,11 @@ import UIKit
     }()
     
     public private(set) lazy var search: UIButton = {
-        UIButton(type: .custom).frame(CGRect(x: 16, y: self.navigation.frame.maxY+5, width: self.view.frame.width-32, height: 44)).backgroundColor(UIColor.theme.neutralColor95).textColor(UIColor.theme.neutralColor6, .normal).title(" Search".chat.localize, .normal).image(UIImage(named: "search", in: .chatBundle, with: nil), .normal).addTargetFor(self, action: #selector(searchAction), for: .touchUpInside).cornerRadius(Appearance.avatarRadius)
+        UIButton(type: .custom).frame(CGRect(x: 16, y: self.navigation.frame.maxY+5, width: self.view.frame.width-32, height: 36)).backgroundColor(UIColor.theme.neutralColor95).textColor(UIColor.theme.neutralColor6, .normal).title(" Search".chat.localize, .normal).image(UIImage(named: "search", in: .chatBundle, with: nil), .normal).addTargetFor(self, action: #selector(searchAction), for: .touchUpInside).cornerRadius(Appearance.avatarRadius)
     }()
     
     public private(set) lazy var conversationList: ConversationList = {
-        ConversationList(frame: CGRect(x: 0, y: self.search.frame.maxY, width: self.view.frame.width, height: self.view.frame.height-NavigationHeight-44-(self.tabBarController?.tabBar.frame.height ?? 0)), style: .plain)
+        ConversationList(frame: CGRect(x: 0, y: self.search.frame.maxY+5, width: self.view.frame.width, height: self.view.frame.height-NavigationHeight-49-(self.tabBarController?.tabBar.frame.height ?? 0)), style: .plain)
     }()
     
     public private(set) var viewModel: ConversationViewModel = ConversationViewModel()

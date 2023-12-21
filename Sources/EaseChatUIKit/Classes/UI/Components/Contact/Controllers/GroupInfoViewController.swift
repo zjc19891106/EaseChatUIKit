@@ -253,7 +253,7 @@ extension GroupInfoViewController: UITableViewDelegate,UITableViewDataSource {
     }
     
     public func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        section <= 0 ? UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 30)).backgroundColor(UIColor.theme.neutralColor95):nil
+        section <= 0 ? UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 30)).backgroundColor(Theme.style == .dark ? UIColor.theme.neutralColor2:UIColor.theme.neutralColor95):nil
     }
 
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

@@ -66,8 +66,15 @@ extension ConversationServiceImplement: ConversationService {
                             if silentError == nil {
                                 if let list = result?.list {
                                     for item in list {
-                                        if let silentMode = resultSilent?[item.id]?.remindType,silentMode == .mentionOnly {
-                                            self.muteMap[EaseChatUIKitContext.shared?.currentUserId ?? ""]?[item.id] = silentMode.rawValue
+                                        if let silentMode = resultSilent?[item.id]?.remindType {
+                                            let currentUser = EaseChatUIKitContext.shared?.currentUserId ?? ""
+                                            var conversationMap = self.muteMap[currentUser]
+                                            if conversationMap != nil {
+                                                conversationMap?[item.id] = silentMode.rawValue
+                                            } else {
+                                                conversationMap = [item.id:silentMode.rawValue]
+                                            }
+                                            self.muteMap[currentUser] = conversationMap
                                         }
                                     }
                                     completion(list,silentError)
@@ -102,9 +109,6 @@ extension ConversationServiceImplement: ConversationService {
     public func setSilentMode(conversationId: String, completion: @escaping (SilentModeResult?, ChatError?) -> Void) {
         if let conversation = ChatClient.shared().chatManager?.getConversationWithConvId(conversationId) {
             ChatClient.shared().pushManager?.setSilentModeForConversation(conversationId, conversationType: conversation.type, params: SilentModeParam(paramType: .remindType),completion: { [weak self] result, error in
-                if error == nil {
-                    self?.muteMap[EaseChatUIKitContext.shared?.currentUserId ?? ""]?[result?.conversationID ?? ""] = 1
-                }
                 self?.handleResult(error: error, type: .setSilent)
                 completion(result,error)
             })
@@ -144,7 +148,14 @@ extension ConversationServiceImplement: ConversationService {
                         if silentError == nil {
                             for item in list {
                                 if let silentMode = resultSilent?[item.conversationId]?.remindType {
-                                    self?.muteMap[EaseChatUIKitContext.shared?.currentUserId ?? ""]?[item.conversationId] = silentMode.rawValue
+                                    let currentUser = EaseChatUIKitContext.shared?.currentUserId ?? ""
+                                    var conversationMap = self?.muteMap[currentUser]
+                                    if conversationMap != nil {
+                                        conversationMap?[item.conversationId] = silentMode.rawValue
+                                    } else {
+                                        conversationMap = [item.conversationId:silentMode.rawValue]
+                                    }
+                                    self?.muteMap[currentUser] = conversationMap
                                 }
                             }
                         }

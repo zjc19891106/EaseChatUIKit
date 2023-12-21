@@ -54,7 +54,6 @@ import UIKit
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        self.badge.frame = CGRect(x: ScreenWidth-70, y: self.contentView.frame.height/2.0-9, width: 32, height: 18)
     }
     
     /// Refresh cell on needed.
@@ -70,6 +69,7 @@ import UIKit
         if item.numberCount > 0 {
             self.badge.text = "\(item.numberCount)"
         }
+        self.badge.frame = CGRect(x: ScreenWidth-70, y: self.contentView.frame.height/2.0-9, width: item.numberCount > 9 ? 32:18, height: 18)
         self.badge.isHidden = !item.showNumber
     }
     

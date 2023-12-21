@@ -179,7 +179,6 @@ extension ConversationList: UITableViewDelegate,UITableViewDataSource {
                 }.backgroundColor(color: Theme.style == .dark ? UIColor.theme.neutralSpecialColor6:UIColor.theme.neutralSpecialColor5).icon(image: UIImage(named: "read", in: .chatBundle, with: nil))
             case .delete:
                 return UIContextualActionChatUIKit(title: "conversation_right_slide_menu_delete".chat.localize, style: .normal, actionType: $0) { (action, view, completion) in
-                    self.deleteRows(at: [indexPath], with: .fade)
                     for listener in self.eventHandlers.allObjects {
                         listener.onConversationSwipe(type: .delete, info: info)
                     }
@@ -314,6 +313,7 @@ extension ConversationList: IConversationListDriver {
     private func mute(info: ConversationInfo) {
         if let index = self.datas.firstIndex(where: { $0.id == info.id }) {
             self.datas[index] = info
+            self.datas[index].doNotDisturb = true
             if self.indexPathsForVisibleRows?.contains(where: { $0.row == index }) ?? false {
                 self.reloadRows(at: [IndexPath(row: index, section: 0)], with: .none)
             }
@@ -323,6 +323,7 @@ extension ConversationList: IConversationListDriver {
     private func unmute(info: ConversationInfo) {
         if let index = self.datas.firstIndex(where: { $0.id == info.id }) {
             self.datas[index] = info
+            self.datas[index].doNotDisturb = false
             if self.indexPathsForVisibleRows?.contains(where: { $0.row == index }) ?? false {
                 self.reloadRows(at: [IndexPath(row: index, section: 0)], with: .none)
             }
@@ -331,6 +332,7 @@ extension ConversationList: IConversationListDriver {
     
     private func delete(info: ConversationInfo) {
         if let index = self.datas.firstIndex(where: { $0.id == info.id }) {
+            self.deleteRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
             self.datas.remove(at: index)
             self.updateIndexMap()
         }

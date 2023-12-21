@@ -248,6 +248,9 @@ extension ContactView: IContactListDriver {
     public func remove(info: EaseProfileProtocol) {
         var indexPath: IndexPath?
         for (section,sections) in self.contacts.enumerated() {
+            if indexPath != nil {
+                break
+            }
             for (row,item) in sections.enumerated() {
                 if info.id == item.id {
                     self.rawData.removeAll { $0.id == item.id }
@@ -255,13 +258,10 @@ extension ContactView: IContactListDriver {
                     break
                 }
             }
-            if indexPath != nil {
-                break
-            }
         }
         if let idx = indexPath {
-            self.contactList.deleteRows(at: [idx], with: .automatic)
             self.contacts[idx.section].remove(at: idx.row)
+            self.refreshList(infos: self.rawData)
         }
     }
     

@@ -72,11 +72,18 @@ extension ContactServiceImplement: ContactServiceProtocol {
     
     public func addContact(userId: String, invitation: String, completion: @escaping (ChatError?, String) -> Void) {
         ChatClient.shared().contactManager?.addContact(userId, message: invitation, completion: { [weak self] useId, error in
-            if error == nil,var count = self?.newFriends.count {
-                self?.newFriends.remove(userId)
+            guard let `self` = self else { return }
+            if error == nil,self.newFriends.count > 0 {
+                var friends = Set<String>()
+                for friend in self.newFriends {
+                    if userId != friend {
+                        friends.insert(friend)
+                    }
+                }
+                self.newFriends = friends
             }
             completion(error,userId)
-            self?.handleResult(error: error, type: .add, operatorId: EaseChatUIKitContext.shared?.currentUserId ?? "")
+            self.handleResult(error: error, type: .add, operatorId: EaseChatUIKitContext.shared?.currentUserId ?? "")
         })
     }
     

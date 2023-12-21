@@ -377,8 +377,8 @@ extension MessageListViewModel: MessageListViewActionEventsDelegate {
                 mentionIds.append(mentionInfo.id)
             }
         }
-        if mentionIds.contains("ALL") {
-            extensionInfo["em_at_list"] = "ALL"
+        if mentionIds.contains("All") {
+            extensionInfo["em_at_list"] = "All"
         } else {
             extensionInfo["em_at_list"] = mentionIds
         }

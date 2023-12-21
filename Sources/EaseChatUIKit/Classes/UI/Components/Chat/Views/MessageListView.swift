@@ -126,7 +126,7 @@ import UIKit
     }()
         
     public private(set) lazy var inputBar: MessageInputBar = {
-        ComponentsRegister.shared.ChatInputBar.init(frame: CGRect(x: 0, y: self.frame.height-52-BottomBarHeight, width: self.frame.width, height: 52+BottomBarHeight), text: "", placeHolder: "Aa")
+        ComponentsRegister.shared.ChatInputBar.init(frame: CGRect(x: 0, y: self.frame.height-52-BottomBarHeight, width: self.frame.width, height: 52), text: "", placeHolder: "Aa")
     }()
     
     public private(set) lazy var replyBar: MessageInputReplyView = {

@@ -184,7 +184,9 @@ import UIKit
     
     @objc private func removeRecord() {
         self.recordAlert.text = nil
-        self.stopPlay(send: false)
+        AudioTools.shared.stopPlaying()
+        self.recordIcon.stopAnimation()
+        self.recordTitle.text = "Record".chat.localize
         self.duration = 0
         self.recordCount = 0
         self.playCount = 0

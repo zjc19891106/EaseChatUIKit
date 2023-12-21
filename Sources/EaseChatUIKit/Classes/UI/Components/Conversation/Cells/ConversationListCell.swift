@@ -43,8 +43,8 @@ import UIKit
         self.nickName.frame = CGRect(x: self.avatar.frame.maxX+12, y: self.avatar.frame.minX+4, width: self.contentView.frame.width-self.avatar.frame.maxX-12-16-50, height: 16)
         self.date.frame = CGRect(x: self.contentView.frame.width-66, y: self.nickName.frame.minY+2, width: 50, height: 16)
         self.content.frame = CGRect(x: self.avatar.frame.maxX+12, y: self.nickName.frame.maxY+2, width: self.contentView.frame.width-self.avatar.frame.maxX-12-16-50, height: 16)
-        self.badge.frame = CGRect(x: self.contentView.frame.width-48, y: self.nickName.frame.maxY+5, width: 32, height: 18)
-        self.dot.frame =  CGRect(x: self.contentView.frame.width-28, y: self.nickName.frame.maxY+10, width: 8, height: 8)
+//        self.badge.frame = CGRect(x: self.contentView.frame.width-48, y: self.nickName.frame.maxY+5, width: 32, height: 18)
+        self.dot.frame =  CGRect(x: self.contentView.frame.width-38, y: self.nickName.frame.maxY+10, width: 8, height: 8)
     }
     
     required public init?(coder: NSCoder) {
@@ -52,6 +52,11 @@ import UIKit
     }
     
     func refresh(info: ConversationInfo) {
+        var contentColor = UIColor.clear
+        if info.pinned {
+            contentColor = Theme.style == .dark ? UIColor.theme.neutralColor2:UIColor.theme.neutralColor95
+        }
+        self.contentView.backgroundColor =  contentColor
         self.avatar.cornerRadius(Appearance.avatarRadius)
         self.avatar.image(with: info.avatarURL, placeHolder: info.type == .chat ? Appearance.conversation.singlePlaceHolder:Appearance.conversation.groupPlaceHolder)
         let name = info.nickName.isEmpty ? info.id:info.nickName
@@ -71,13 +76,14 @@ import UIKit
         self.nickName.setAttributedTitle(nameAttribute, for: .normal)
         self.content.attributedText = info.showContent
         self.date.text = info.lastMessage?.showDate ?? Date().chat.dateString(Appearance.conversation.dateFormatToday)
-        self.badge.isHidden = info.doNotDisturb
         self.badge.text = info.unreadCount > 99 ? "99+":"\(info.unreadCount)"
-        self.badge.isHidden = info.unreadCount <= 0
         if info.doNotDisturb {
+            self.badge.isHidden = true
             self.dot.isHidden = info.unreadCount <= 0
         } else {
+            self.badge.isHidden = info.unreadCount <= 0
             self.dot.isHidden = true
+            self.badge.frame = CGRect(x: self.contentView.frame.width-48, y: self.nickName.frame.maxY+5, width: info.unreadCount > 9 ? 32:18, height: 18)
         }
     }
     

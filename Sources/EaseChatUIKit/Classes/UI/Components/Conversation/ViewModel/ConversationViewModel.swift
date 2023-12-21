@@ -208,7 +208,14 @@ extension ConversationViewModel: ConversationListActionEventsDelegate {
                     if error != nil {
                         consoleLogInfo("onConversationSwipe mute:\(error?.errorDescription ?? "")", type: .error)
                     } else {
-                        info.doNotDisturb = true
+                        let currentUser = EaseChatUIKitContext.shared?.currentUserId ?? ""
+                        var conversationMap = self?.muteMap[currentUser]
+                        if conversationMap != nil {
+                            conversationMap?[info.id] = 1
+                        } else {
+                            conversationMap = [info.id:1]
+                        }
+                        self?.muteMap[currentUser] = conversationMap
                         self?.driver?.swipeMenuOperation(info: info, type: .mute)
                     }
                 }
@@ -216,7 +223,14 @@ extension ConversationViewModel: ConversationListActionEventsDelegate {
                     if error != nil {
                         consoleLogInfo("onConversationSwipe unmute:\(error?.errorDescription ?? "")", type: .error)
                     } else {
-                        info.doNotDisturb = false
+                        let currentUser = EaseChatUIKitContext.shared?.currentUserId ?? ""
+                        var conversationMap = self?.muteMap[currentUser]
+                        if conversationMap != nil {
+                            conversationMap?[info.id] = 0
+                        } else {
+                            conversationMap = [info.id:0]
+                        }
+                        self?.muteMap[currentUser] = conversationMap
                         self?.driver?.swipeMenuOperation(info: info, type: .unmute)
                     }
                 }

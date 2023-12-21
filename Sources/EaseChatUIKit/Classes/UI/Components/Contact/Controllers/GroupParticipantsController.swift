@@ -185,8 +185,8 @@ import UIKit
         } else {
             if self.mention {
                 let profile = EaseProfile()
-                profile.id = "ALL"
-                profile.nickName = "ALL"
+                profile.id = "All"
+                profile.nickName = "All"
                 self.participants.insert(profile, at: 0)
             }
             self.participantsList.reloadData()
